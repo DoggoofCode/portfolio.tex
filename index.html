@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ved Jaggi — Portfolio</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [
+            ["\\(", "\\)"],
+            ["$", "$"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+          processEscapes: true,
+        },
+        options: {
+          skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+        },
+      };
+    </script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ></script>
+    <script type="module" src="/script.js"></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="title-block">
+        <h1>Portfolio</h1>
+        <p class="author">Ved Jaggi</p>
+        <p class="affiliation">Independent Product &amp; Design Engineer, Singapore</p>
+        <p class="date">May 31, 2026</p>
+      </header>
+
+      <section class="abstract no-counter">
+        <h2 class="abstract-title">Abstract</h2>
+        <p class="no-indent">
+          I design and build digital products with an emphasis on clarity, measured typography,
+          and systems-level thinking. My work blends research, design, and engineering to deliver
+          interfaces that feel quiet, rigorous, and reliable in production.
+        </p>
+        <p class="keywords no-indent">
+          Keywords: design systems, product strategy, front-end architecture, data visualization,
+          accessibility.
+        </p>
+        <p class="no-indent">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+      </section>
+
+      <section>
+        <h2>Focus Areas</h2>
+        <p>
+          Human-centered systems, calm interfaces, high-fidelity prototyping, and design-to-code
+          workflows for teams that ship complex products.
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua. Example math: \(E = mc^2\), and
+          $$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}.$$
+        </p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p class="no-indent">
+          <a href="mailto:hello@vedjaggi.com">hello@vedjaggi.com</a> |
+          <a href="https://vedjaggi.com">vedjaggi.com</a> |
+          <a href="https://github.com/vedjaggi">github.com/vedjaggi</a>
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+      </section>
+
+      <section>
+        <h2>Experience</h2>
+        <div id="experience-intro"></div>
+        <p id="experience-fallback" class="no-indent">Loading experience...</p>
+        <div id="experience-entries"></div>
+      </section>
+
+      <section>
+        <h2>Projects</h2>
+        <div id="projects-intro"></div>
+        <p id="projects-fallback" class="no-indent">Loading projects...</p>
+        <div id="projects-accordion" class="accordion"></div>
+      </section>
+
+      <section>
+        <h2>Appendix Notes</h2>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+        <div class="accordion">
+          <details open>
+            <summary>Research Method</summary>
+            <div class="accordion-body">
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                incididunt ut labore et dolore magna aliqua.
+              </p>
+              <p>
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
+                ex ea commodo consequat.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>System Architecture</summary>
+            <div class="accordion-body">
+              <p>
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+                fugiat nulla pariatur.
+              </p>
+              <p>
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+                mollit anim id est laborum.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Interaction Notes</summary>
+            <div class="accordion-body">
+              <p>
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
+                doloremque laudantium.
+              </p>
+              <p>
+                Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto
+                beatae vitae dicta sunt explicabo.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section>
+        <h2>Publications &amp; Talks</h2>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+        <ol class="references">
+          <li>
+            Jaggi, V. (2026). <em>Typography as an interface system.</em> Design Systems Summit.
+          </li>
+          <li>
+            Jaggi, V. (2025). <em>Paper metaphors in modern product design.</em> Interaction Lab
+            Colloquium.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>In-School Achievements</h2>
+        <div id="achievements-content"></div>
+        <p id="achievements-fallback" class="no-indent">Loading achievements...</p>
+      </section>
+
+      <section>
+        <h2>Awards &amp; Service</h2>
+        <ul>
+          <li>Best Product Narrative — Interaction Awards, 2025.</li>
+          <li>Mentor — Design Engineering Fellowship, 2023-Present.</li>
+        </ul>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+      </section>
+
+      <hr class="rule" />
+      <p class="small">References available upon request.</p>
+    </main>
+  </body>
+</html>
