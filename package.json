@@ -1,0 +1,23 @@
+{
+  "name": "portfolio.tex",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "vite": "^8.0.15"
+  },
+  "dependencies": {
+    "marked": "^18.0.4",
+    "three": "^0.184.0"
+  }
+}
