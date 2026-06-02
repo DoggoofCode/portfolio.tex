@@ -1,8 +1,8 @@
 ## Projects
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-labore et dolore magna aliqua.
+These are a few of my best projects. You can see more on my [github page](https://github.com/Doggoofcode)
 
-### Typograph — LaTeX-inspired UI kit
+<!-- dev:start -->
+### Test Project
 Built a component library for documentation-heavy products with paper-like reading ergonomics and
 precise grid behavior.
 
@@ -12,40 +12,21 @@ precise grid behavior.
 
 <demo-1></demo-1>
 
+Artifacts: see [Appendix](#appendix).
+
 It is said that
 > Hello world
 > 
 > Some guy
 
 It is obviously the way to go!
+<!-- dev:end -->
 
-### Arcfield — Logistics control tower
-Designed and engineered a realtime dashboard for route optimization and fleet health.
+### VAE for Synthetic Data
+Within this project I used a VAE to create synthetic data of numbers and fruits. VAE's take incredibly complex data
 
-We used a simple constraint model: $x^{*} = \arg\min_x \sum_i w_i c_i(x)$ to prioritize routes.
-
-### Quiet Ledger — Personal finance research
-Prototyped a calm, paper-like ledger interface to help users understand spending trends.
-
-Key idea: a low-contrast density curve, $f(t) = \int_0^t r(\tau) d\tau$, to surface change.
-
-## Experience
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-et dolore magna aliqua.
-
-### Lead Product Engineer — Studio Atlas
-Dates: 2023–Present
-Directed a small team building data-heavy products for climate and logistics clients.
-
-- Shipped a design system that reduced UI regressions by 40% across three products.
-- Rebuilt the analytics stack for faster load times and clearer decision making.
-
-### Product Designer — Northwind Labs
-Dates: 2020–2023
-Partnered with engineering and research to launch workflow tools for distributed teams.
-
-- Led user research, prototyping, and delivery for a multi-tenant admin suite.
-- Introduced a typographic system inspired by scientific papers for long-form views.
+#### Applications
+Synthetic data from VAEs are incredibly useful models that can generate synthetic data for models 
 
 ## In-School Achievements
 - Dean's List — add years.
@@ -53,3 +34,13 @@ Partnered with engineering and research to launch workflow tools for distributed
 - Scholarship or award — add name.
 
 Add competitions, research, or leadership roles here.
+
+## Appendix Notes
+Project artifacts live here for download.
+
+### Typograph Artifacts
+<resource-1 location="typograph/typograph-case-study.pdf" label="Typograph case study (PDF)"></resource-1>
+<resource-2 location="typograph/typograph-wireframes.zip" label="Typograph wireframes (ZIP)"></resource-2>
+
+### Arcfield Artifacts
+<resource-3 location="testdir/test.html" label="Arcfield metrics report (PDF)"></resource-3>

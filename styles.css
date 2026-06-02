@@ -24,6 +24,102 @@ body {
   line-height: 1.35;
 }
 
+.gate {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  z-index: 20;
+}
+
+.gate-panel {
+  width: min(420px, 90%);
+  border: 1px solid var(--rule-light);
+  padding: 1rem 1.2rem;
+}
+
+.gate-title {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+  text-indent: 0;
+}
+
+.gate-form {
+  margin: 0;
+}
+
+.gate-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.gate-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gate-row input {
+  flex: 1;
+  border: 1px solid var(--rule-light);
+  padding: 0.35rem 0.4rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.gate-row button {
+  border: 1px solid var(--rule-light);
+  background: #ffffff;
+  padding: 0.35rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.gate-error {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-indent: 0;
+}
+
+body.locked .page,
+body.locked .top-nav {
+  display: none;
+}
+
+body.locked .gate {
+  display: flex;
+}
+
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule-light);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.top-nav .nav-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.45rem 18px;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+body.scrolled .top-nav {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+}
+
 .page {
   max-width: 760px;
   margin: 40px auto 64px;
@@ -247,6 +343,32 @@ blockquote p {
   margin-bottom: 0.45rem;
 }
 
+.resource-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border: 1px solid var(--rule-light);
+  padding: 0.35rem 0.6rem;
+  margin: 0.45rem 0;
+  background: #ffffff;
+  font-size: 0.95rem;
+}
+
+.resource-name {
+  font-weight: 600;
+}
+
+.resource-link {
+  font-size: 0.9rem;
+}
+
+.resource-link--disabled {
+  color: var(--muted);
+  text-decoration: none;
+  pointer-events: none;
+}
+
 .demo-wrap {
   width: min(420px, 100%);
   margin: 0.4rem auto 0.8rem;
@@ -272,8 +394,8 @@ blockquote p {
 }
 
 #projects-intro p,
-#experience-intro p,
-#achievements-content p {
+#achievements-intro p,
+#appendix-intro p {
   text-indent: 0;
 }
 

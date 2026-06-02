@@ -36,15 +36,43 @@
     <script type="module" src="/script.js"></script>
   </head>
   <body>
+    <div id="password-gate" class="gate" hidden>
+      <div class="gate-panel">
+        <p class="gate-title">Password required</p>
+        <form id="gate-form" class="gate-form">
+          <label class="gate-label" for="gate-input">Password</label>
+          <div class="gate-row">
+            <input id="gate-input" type="password" autocomplete="current-password" />
+            <button type="submit">Enter</button>
+          </div>
+        </form>
+        <p id="gate-error" class="gate-error" role="alert" aria-live="polite"></p>
+      </div>
+    </div>
+    <nav class="top-nav">
+      <div class="nav-inner">
+        <a href="#abstract">Abstract</a>
+        <a href="#focus">Focus Areas</a>
+        <a href="#projects">Projects</a>
+        <a href="#achievements">In-School Achievements</a>
+        <a href="#appendix">Appendix</a>
+      </div>
+    </nav>
     <main class="page">
-      <header class="title-block">
+      <header class="title-block" id="top">
         <h1>Portfolio</h1>
         <p class="author">Ved Jaggi</p>
-        <p class="affiliation">Independent Product &amp; Design Engineer, Singapore</p>
+        <!-- <p class="affiliation">Independent Product &amp; Design Engineer, Singapore</p> -->
         <p class="date">May 31, 2026</p>
+        <p class="contact">
+          <a href="mailto:ved@vedjaggi.com">ved@vedjaggi.com</a> |
+          <a href="https://vedjaggi.com">vedjaggi.com</a> |
+          <a href="https://github.com/vedjaggi">github.com/vedjaggi</a> |
+          <a href="https://www.linkedin.com/in/vedjaggi">linkedin.com/in/vedjaggi</a>
+        </p>
       </header>
 
-      <section class="abstract no-counter">
+      <section class="abstract no-counter" id="abstract">
         <h2 class="abstract-title">Abstract</h2>
         <p class="no-indent">
           I design and build digital products with an emphasis on clarity, measured typography,
@@ -61,7 +89,7 @@
         </p>
       </section>
 
-      <section>
+      <section id="focus">
         <h2>Focus Areas</h2>
         <p>
           Human-centered systems, calm interfaces, high-fidelity prototyping, and design-to-code
@@ -74,115 +102,25 @@
         </p>
       </section>
 
-      <section>
-        <h2>Contact</h2>
-        <p class="no-indent">
-          <a href="mailto:hello@vedjaggi.com">hello@vedjaggi.com</a> |
-          <a href="https://vedjaggi.com">vedjaggi.com</a> |
-          <a href="https://github.com/vedjaggi">github.com/vedjaggi</a>
-        </p>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua.
-        </p>
-      </section>
-
-      <section>
-        <h2>Experience</h2>
-        <div id="experience-intro"></div>
-        <p id="experience-fallback" class="no-indent">Loading experience...</p>
-        <div id="experience-entries"></div>
-      </section>
-
-      <section>
+      <section id="projects">
         <h2>Projects</h2>
         <div id="projects-intro"></div>
         <p id="projects-fallback" class="no-indent">Loading projects...</p>
         <div id="projects-accordion" class="accordion"></div>
       </section>
 
-      <section>
-        <h2>Appendix Notes</h2>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua.
-        </p>
-        <div class="accordion">
-          <details open>
-            <summary>Research Method</summary>
-            <div class="accordion-body">
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                incididunt ut labore et dolore magna aliqua.
-              </p>
-              <p>
-                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                ex ea commodo consequat.
-              </p>
-            </div>
-          </details>
-          <details>
-            <summary>System Architecture</summary>
-            <div class="accordion-body">
-              <p>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                fugiat nulla pariatur.
-              </p>
-              <p>
-                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-                mollit anim id est laborum.
-              </p>
-            </div>
-          </details>
-          <details>
-            <summary>Interaction Notes</summary>
-            <div class="accordion-body">
-              <p>
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
-                doloremque laudantium.
-              </p>
-              <p>
-                Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto
-                beatae vitae dicta sunt explicabo.
-              </p>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <section>
-        <h2>Publications &amp; Talks</h2>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua.
-        </p>
-        <ol class="references">
-          <li>
-            Jaggi, V. (2026). <em>Typography as an interface system.</em> Design Systems Summit.
-          </li>
-          <li>
-            Jaggi, V. (2025). <em>Paper metaphors in modern product design.</em> Interaction Lab
-            Colloquium.
-          </li>
-        </ol>
-      </section>
-
-      <section>
+      <section id="achievements">
         <h2>In-School Achievements</h2>
-        <div id="achievements-content"></div>
+        <div id="achievements-intro"></div>
         <p id="achievements-fallback" class="no-indent">Loading achievements...</p>
+        <div id="achievements-accordion" class="accordion"></div>
       </section>
 
-      <section>
-        <h2>Awards &amp; Service</h2>
-        <ul>
-          <li>Best Product Narrative — Interaction Awards, 2025.</li>
-          <li>Mentor — Design Engineering Fellowship, 2023-Present.</li>
-        </ul>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua.
-        </p>
+      <section id="appendix">
+        <h2>Appendix Notes</h2>
+        <div id="appendix-intro"></div>
+        <p id="appendix-fallback" class="no-indent">Loading appendix...</p>
+        <div id="appendix-accordion" class="accordion"></div>
       </section>
 
       <hr class="rule" />
