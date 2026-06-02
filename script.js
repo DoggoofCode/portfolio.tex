@@ -338,7 +338,7 @@ const buildResourceUrl = (location) => {
 
 const isHtmlResponse = (response) => {
   const contentType = response.headers.get("content-type") || "";
-  return contentType.includes("text/html");
+  return contentType.toLowerCase().includes("text/html");
 };
 
 const isHtmlLocation = (location) => /\.html?$/i.test(location);
@@ -406,7 +406,7 @@ const isIndexFallback = async (response) => {
 
 const checkResource = async (url, allowHtml) => {
   try {
-    const headResponse = await fetch(url, { method: "HEAD" });
+    const headResponse = await fetch(url, { method: "HEAD", cache: "no-store" });
     if (headResponse.ok) {
       const isHtml = isHtmlResponse(headResponse);
       if (!isHtml) {
@@ -416,6 +416,9 @@ const checkResource = async (url, allowHtml) => {
         return false;
       }
       const fallback = await isIndexFallback(headResponse);
+      if (fallback === null) {
+        return true;
+      }
       if (fallback === false) {
         return true;
       }
@@ -433,6 +436,7 @@ const checkResource = async (url, allowHtml) => {
   try {
     const getResponse = await fetch(url, {
       method: "GET",
+      cache: "no-store",
       headers: { Range: "bytes=0-0" },
     });
     if (!getResponse.ok) {
@@ -455,7 +459,7 @@ const checkResource = async (url, allowHtml) => {
       return false;
     }
 
-    return false;
+    return true;
   } catch (error) {
     return false;
   }
