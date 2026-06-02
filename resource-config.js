@@ -1,1 +1,1 @@
-export const RESOURCE_BASE = "/artifacts";
+export const RESOURCE_BASE = `${import.meta.env.BASE_URL}artifacts`;
