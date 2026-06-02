@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => {
-  const prodFlag = mode === "prod" || process.argv.includes("--prod");
+  const prodFlag = mode === "prod";
 
   return {
     appType: "mpa",
