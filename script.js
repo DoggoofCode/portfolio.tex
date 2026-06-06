@@ -1,4 +1,6 @@
 import { marked } from "marked";
+import hljs from "highlight.js";
+import "highlight.js/styles/github.css";
 import * as demos from "./demos.js";
 import { RESOURCE_BASE } from "./resource-config.js";
 import { DEV_MODE, SITE_PASSWORD, ALLOW_LOCAL_BYPASS } from "./site-config.js";
@@ -7,6 +9,31 @@ const PROJECTS_HEADING = "Projects";
 const ACHIEVEMENTS_HEADING = "In-School Achievements";
 const APPENDIX_HEADING = "Appendix Notes";
 const PASSWORD_KEY = "portfolio_unlocked";
+
+marked.use({
+  renderer: {
+    code(code, infostring) {
+      const source =
+        typeof code === "string"
+          ? code
+          : typeof code?.text === "string"
+            ? code.text
+            : typeof code?.raw === "string"
+              ? code.raw
+              : String(code ?? "");
+      const lang = (typeof infostring === "string" ? infostring : code?.lang || "")
+        .trim()
+        .split(/\s+/)[0];
+      const canHighlight = lang && hljs.getLanguage(lang);
+      const highlighted = canHighlight
+        ? hljs.highlight(source, { language: lang, ignoreIllegals: true }).value
+        : hljs.highlightAuto(source).value;
+      const languageClass = lang ? ` language-${lang}` : "";
+
+      return `<pre class="code-block"><code class="hljs${languageClass}">${highlighted}</code></pre>`;
+    },
+  },
+});
 
 const normalizeHeading = (text) =>
   text
@@ -291,13 +318,22 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
   typesetMath([accordion, introTarget]);
 };
 
+const renderSafely = (label, fallbackId, renderFn) => {
+  try {
+    renderFn();
+  } catch (error) {
+    console.error(`Failed to render ${label}.`, error);
+    setFallback(fallbackId, `Failed to render ${label}.`);
+  }
+};
+
 const initDemos = (container) => {
   if (!container) {
     return;
   }
 
   const demoNodes = Array.from(container.querySelectorAll("*")).filter((node) =>
-    node.tagName.startsWith("DEMO-")
+    node.tagName.startsWith("DEMO-") || node.tagName.endsWith("-DEMO")
   );
 
   demoNodes.forEach((node) => {
@@ -543,21 +579,25 @@ const loadContent = async () => {
     }
 
     const tokens = marked.lexer(source);
-    renderProjects(tokens);
-    renderAccordionSection({
-      tokens,
-      heading: ACHIEVEMENTS_HEADING,
-      introId: "achievements-intro",
-      accordionId: "achievements-accordion",
-      fallbackId: "achievements-fallback",
-    });
-    renderAccordionSection({
-      tokens,
-      heading: APPENDIX_HEADING,
-      introId: "appendix-intro",
-      accordionId: "appendix-accordion",
-      fallbackId: "appendix-fallback",
-    });
+    renderSafely("Projects", "projects-fallback", () => renderProjects(tokens));
+    renderSafely("In-School Achievements", "achievements-fallback", () =>
+      renderAccordionSection({
+        tokens,
+        heading: ACHIEVEMENTS_HEADING,
+        introId: "achievements-intro",
+        accordionId: "achievements-accordion",
+        fallbackId: "achievements-fallback",
+      })
+    );
+    renderSafely("Appendix Notes", "appendix-fallback", () =>
+      renderAccordionSection({
+        tokens,
+        heading: APPENDIX_HEADING,
+        introId: "appendix-intro",
+        accordionId: "appendix-accordion",
+        fallbackId: "appendix-fallback",
+      })
+    );
   } catch (error) {
     setFallback("projects-fallback", "Failed to load content.md.");
     setFallback("achievements-fallback", "Failed to load content.md.");

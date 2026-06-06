@@ -26,9 +26,9 @@ It is obviously the way to go!
 
 Within this project I used a VAE _(Variational Autoencoder)_ to create synthetic data of numbers and fruits. VAE's take complex data and distills it into the simpler building blocks, for example, the tilt of the character or the position of the character. All of this data is put into a _latent space_, which can be thought of as a smaller image, or a point in a higher dimensional space. As you put more points in this space, the model slowly begins to put similar inputs closer, and different inputs farther apart in this space (i.e. images of the digit one closer to eachother, while images of the digit eight farther apart from the previous images).
 
-<demo-1></demo-1>
+<vae-structure-demo></vae-structure-demo>
 
-> Each point is a unique image, represented by 20 different sliders. This visualization compacts those 20 dimensions into a 2d space, as shown. 
+> Each point is a unique image, represented by 20 different sliders. This visualization compacts those 20 dimensions into a 2d space, as shown. See all position data at the [Appendix](#appendix)
 
 #### Applications
 
@@ -36,8 +36,21 @@ Synthetic data from VAEs are incredibly useful models that can generate syntheti
 
 This process can be adapted for more than one image. To merge two images, you need the point in space which the two images inhabit, then draw a line between them. Each point in that line represents a unique combination of the two source images, Moreover, the line's midpoint represents a combination of the two images
 
-
+![An interpolation between digits 1 and 8](./vae_content/interpolation_8_to_7.png)
 > An interpolation between digits 1 and 8
+
+#### Running the model
+You can run the VAE by downlaoding the model in the [appendix](#appendix/), and can be used for decoding saved latents and merging 5 of the same digit into one.
+
+To start make sure that you have python installed on your computer and run `pip install torch torchvision`. Also make sure that you have downloaded model.pt, latents.json, and inference.py in the appendix. Then at the top of inference.py, you will see: 
+
+```python
+GOAL = "generate data" # Can you choose between "output image" or "generate data"
+MODEL_PATH = "path/to/model.pt"
+IMAGE_PATH = "path/to/output_image.png"
+LATENTS_PATH = "path/to/latents.json"
+```
+You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a choosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
 
 ## In-School Achievements
 Hello world!
@@ -46,9 +59,10 @@ Hello world!
 
 Project artifacts live here for download.
 
-### Typograph Artifacts
-<resource-1 location="typograph/typograph-case-study.pdf" label="Typograph case study (PDF)"></resource-1>
-<resource-2 location="typograph/typograph-wireframes.zip" label="Typograph wireframes (ZIP)"></resource-2>
+### VAE Data
+<resource-1 location="./vae/latents.json" label="Training data latent positions (JSON)"></resource-1>
+<resource-2 location="./vae/model.pt" label="MNIST VAE Model (PT)"></resource-2>
+<resource-4 location="./vae/inference.py" label="Model Inference Script (PY)"></resource-4>
 
 ### Arcfield Artifacts
 <resource-3 location="testdir/test.html" label="Arcfield metrics report (PDF)"></resource-3>

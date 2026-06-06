@@ -93,3 +93,5 @@ export const demo_1 = (container) => {
   const observer = new ResizeObserver(resize);
   observer.observe(container);
 };
+
+export const vae_structure_demo = demo_1;

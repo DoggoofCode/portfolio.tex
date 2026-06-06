@@ -127,6 +127,38 @@ body.scrolled .top-nav {
   background: var(--paper);
 }
 
+.page img {
+  display: block;
+  width: min(100%, 720px);
+  max-width: 100%;
+  height: auto;
+  margin: 0.85rem auto;
+}
+
+.page pre {
+  margin: 0.7rem 0 0.9rem;
+}
+
+.page pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--rule-light);
+  background: #f8f8f8;
+  color: var(--ink);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.page code:not(.hljs) {
+  padding: 0.05rem 0.25rem;
+  border: 1px solid var(--rule-light);
+  background: #f5f5f5;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92em;
+}
+
 .title-block {
   text-align: center;
   margin-bottom: 1.8rem;
