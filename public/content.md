@@ -1,3 +1,13 @@
+## Abstract
+
+I am especially interested in AI-driven experiences and the mathematics behind them, and I like learning those concepts by rebuilding them in code through data visualizations and interactive models.
+
+Keywords: machine learning, transformers, data visualization, front-end engineering, mathematics.
+
+## Focus Areas
+
+Finding the intersection between mathematics and machine learning through recreation models, such as transformers, quick and high-fidelty prototyping of AI models, and learning new mathematical concepts through code
+
 ## Projects
 These are a few of my best projects. You can see more on my [github page](https://github.com/Doggoofcode)
 
@@ -63,6 +73,3 @@ Project artifacts live here for download.
 <resource-1 location="./vae/latents.json" label="Training data latent positions (JSON)"></resource-1>
 <resource-2 location="./vae/model.pt" label="MNIST VAE Model (PT)"></resource-2>
 <resource-4 location="./vae/inference.py" label="Model Inference Script (PY)"></resource-4>
-
-### Arcfield Artifacts
-<resource-3 location="testdir/test.html" label="Arcfield metrics report (PDF)"></resource-3>

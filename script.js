@@ -169,6 +169,28 @@ const getSection = (tokens, heading) => {
   return { depth: sectionDepth, tokens: sectionTokens };
 };
 
+const renderMarkdownSection = ({ tokens, heading, targetId, fallbackId, postprocess }) => {
+  const section = getSection(tokens, heading);
+  if (!section) {
+    setFallback(fallbackId, `${heading} section not found in content.md.`);
+    return;
+  }
+
+  const target = document.getElementById(targetId);
+  if (!target) {
+    setFallback(fallbackId, `${heading} container missing.`);
+    return;
+  }
+
+  target.innerHTML = marked.parser(section.tokens);
+  if (typeof postprocess === "function") {
+    postprocess(target);
+  }
+
+  clearFallback(fallbackId);
+  typesetMath([target]);
+};
+
 const renderProjects = (tokens) => {
   const section = getSection(tokens, PROJECTS_HEADING);
   if (!section) {
@@ -563,6 +585,8 @@ const loadContent = async () => {
   try {
     const response = await fetch("/content.md", { cache: "no-store" });
     if (!response.ok) {
+      setFallback("abstract-fallback", "Unable to load content.md.");
+      setFallback("focus-fallback", "Unable to load content.md.");
       setFallback("projects-fallback", "Unable to load content.md.");
       setFallback("achievements-fallback", "Unable to load content.md.");
       setFallback("appendix-fallback", "Unable to load content.md.");
@@ -579,6 +603,25 @@ const loadContent = async () => {
     }
 
     const tokens = marked.lexer(source);
+    renderMarkdownSection({
+      tokens,
+      heading: "Abstract",
+      targetId: "abstract-content",
+      fallbackId: "abstract-fallback",
+      postprocess: (target) => {
+        target.querySelectorAll("p").forEach((paragraph) => {
+          if (paragraph.textContent.trim().startsWith("Keywords:")) {
+            paragraph.classList.add("keywords");
+          }
+        });
+      },
+    });
+    renderMarkdownSection({
+      tokens,
+      heading: "Focus Areas",
+      targetId: "focus-content",
+      fallbackId: "focus-fallback",
+    });
     renderSafely("Projects", "projects-fallback", () => renderProjects(tokens));
     renderSafely("In-School Achievements", "achievements-fallback", () =>
       renderAccordionSection({
