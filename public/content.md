@@ -64,7 +64,14 @@ You can either generate data, which takes 5 of the same digit and outputs new da
 
 ### Custom Programming Language
 
-I created a custom assembly-like programming language called `ssl` _(Simple Scripting Language)_ with an operator-operand style language for scripting. The project originally started as an off shoot of [p2pchat](https://github.com/DoggoofCode/p2pchat)
+I created a custom assembly-like programming language called `ssl` _(Simple Scripting Language)_, with an operator-operand style language for scripting. The project originally started as an off shoot of [p2pchat](https://github.com/DoggoofCode/p2pchat). 
+
+#### Interpreter Architecture 
+
+The interpreter is broken up into 5 main stages, the resolver which finds and resolves import statemtents from python and ssl. Next the tokenizer _(which contains both the lexer and the tokenizer)_ breaks down the code into logical pieces then assigns them a token based on their type _(e.g. literal, keyword and identifier)_. It then finds all the labels, essentially how functions and loops are defined, and creates a tree to ensure scoping is enforced. Afterwards, the generated AST is executed.
+
+#### Langage Tutorial
+Under Construction!
 
 <programming-demo></programming-demo>
 
