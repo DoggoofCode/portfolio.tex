@@ -9,6 +9,13 @@ const PROJECTS_HEADING = "Projects";
 const ACHIEVEMENTS_HEADING = "In-School Achievements";
 const APPENDIX_HEADING = "Appendix Notes";
 const PASSWORD_KEY = "portfolio_unlocked";
+const LOADING_SKELETON_IDS = [
+  "abstract-skeleton",
+  "focus-skeleton",
+  "projects-skeleton",
+  "achievements-skeleton",
+  "appendix-skeleton",
+];
 
 marked.use({
   renderer: {
@@ -42,18 +49,28 @@ const normalizeHeading = (text) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
+const clearElement = (id) => {
+  const element = document.getElementById(id);
+  if (element) {
+    element.remove();
+  }
+};
+
 const setFallback = (id, message) => {
   const fallback = document.getElementById(id);
   if (fallback) {
+    fallback.classList.remove("sr-only");
+    fallback.classList.add("no-indent");
     fallback.textContent = message;
   }
 };
 
 const clearFallback = (id) => {
-  const fallback = document.getElementById(id);
-  if (fallback) {
-    fallback.remove();
-  }
+  clearElement(id);
+};
+
+const clearLoadingSkeletons = () => {
+  LOADING_SKELETON_IDS.forEach(clearElement);
 };
 
 const stripDevBlocks = (markdown) =>
@@ -169,16 +186,22 @@ const getSection = (tokens, heading) => {
   return { depth: sectionDepth, tokens: sectionTokens };
 };
 
-const renderMarkdownSection = ({ tokens, heading, targetId, fallbackId, postprocess }) => {
+const renderMarkdownSection = ({ tokens, heading, targetId, fallbackId, skeletonId, postprocess }) => {
   const section = getSection(tokens, heading);
   if (!section) {
     setFallback(fallbackId, `${heading} section not found in content.md.`);
+    if (skeletonId) {
+      clearElement(skeletonId);
+    }
     return;
   }
 
   const target = document.getElementById(targetId);
   if (!target) {
     setFallback(fallbackId, `${heading} container missing.`);
+    if (skeletonId) {
+      clearElement(skeletonId);
+    }
     return;
   }
 
@@ -188,6 +211,9 @@ const renderMarkdownSection = ({ tokens, heading, targetId, fallbackId, postproc
   }
 
   clearFallback(fallbackId);
+  if (skeletonId) {
+    clearElement(skeletonId);
+  }
   typesetMath([target]);
 };
 
@@ -195,6 +221,7 @@ const renderProjects = (tokens) => {
   const section = getSection(tokens, PROJECTS_HEADING);
   if (!section) {
     setFallback("projects-fallback", "Projects section not found in content.md.");
+    clearElement("projects-skeleton");
     return;
   }
 
@@ -232,6 +259,7 @@ const renderProjects = (tokens) => {
   const accordion = document.getElementById("projects-accordion");
   if (!accordion) {
     setFallback("projects-fallback", "Projects container missing.");
+    clearElement("projects-skeleton");
     return;
   }
 
@@ -239,6 +267,7 @@ const renderProjects = (tokens) => {
 
   if (projects.length === 0) {
     setFallback("projects-fallback", "No project entries found.");
+    clearElement("projects-skeleton");
     return;
   }
 
@@ -259,6 +288,7 @@ const renderProjects = (tokens) => {
   });
 
   clearFallback("projects-fallback");
+  clearElement("projects-skeleton");
 
   initDemos(accordion);
   initResources(accordion);
@@ -270,6 +300,7 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
   const section = getSection(tokens, heading);
   if (!section) {
     setFallback(fallbackId, `${heading} section not found in content.md.`);
+    clearElement(`${fallbackId.replace("-fallback", "-skeleton")}`);
     return;
   }
 
@@ -277,6 +308,7 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
   const accordion = document.getElementById(accordionId);
   if (!introTarget || !accordion) {
     setFallback(fallbackId, `${heading} container missing.`);
+    clearElement(`${fallbackId.replace("-fallback", "-skeleton")}`);
     return;
   }
 
@@ -310,6 +342,7 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
     introTarget.innerHTML = marked.parser(sectionTokens);
     accordion.innerHTML = "";
     clearFallback(fallbackId);
+    clearElement(`${fallbackId.replace("-fallback", "-skeleton")}`);
     initResources(introTarget);
     typesetMath([introTarget]);
     return;
@@ -335,6 +368,7 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
   });
 
   clearFallback(fallbackId);
+  clearElement(`${fallbackId.replace("-fallback", "-skeleton")}`);
   initResources(accordion);
   initResources(introTarget);
   typesetMath([accordion, introTarget]);
@@ -346,6 +380,7 @@ const renderSafely = (label, fallbackId, renderFn) => {
   } catch (error) {
     console.error(`Failed to render ${label}.`, error);
     setFallback(fallbackId, `Failed to render ${label}.`);
+    clearElement(fallbackId.replace("-fallback", "-skeleton"));
   }
 };
 
@@ -363,8 +398,10 @@ const initDemos = (container) => {
       return;
     }
 
+    const fnName = node.tagName.toLowerCase().replace(/-/g, "_");
     const wrapper = document.createElement("div");
     wrapper.className = "demo-wrap";
+    wrapper.dataset.demo = fnName;
     const originalParent = node.parentElement;
     if (!originalParent) {
       return;
@@ -374,8 +411,6 @@ const initDemos = (container) => {
     wrapper.appendChild(node);
 
     node.classList.add("demo-shell");
-
-    const fnName = node.tagName.toLowerCase().replace(/-/g, "_");
     const fn = demos[fnName] || window[fnName];
     if (typeof fn === "function") {
       fn(node);
@@ -585,6 +620,7 @@ const loadContent = async () => {
   try {
     const response = await fetch("/content.md", { cache: "no-store" });
     if (!response.ok) {
+      clearLoadingSkeletons();
       setFallback("abstract-fallback", "Unable to load content.md.");
       setFallback("focus-fallback", "Unable to load content.md.");
       setFallback("projects-fallback", "Unable to load content.md.");
@@ -596,6 +632,9 @@ const loadContent = async () => {
     const source = DEV_MODE ? markdown : stripDevBlocks(markdown);
 
     if (!marked || typeof marked.lexer !== "function") {
+      clearLoadingSkeletons();
+      setFallback("abstract-fallback", "Markdown parser unavailable.");
+      setFallback("focus-fallback", "Markdown parser unavailable.");
       setFallback("projects-fallback", "Markdown parser unavailable.");
       setFallback("achievements-fallback", "Markdown parser unavailable.");
       setFallback("appendix-fallback", "Markdown parser unavailable.");
@@ -608,6 +647,7 @@ const loadContent = async () => {
       heading: "Abstract",
       targetId: "abstract-content",
       fallbackId: "abstract-fallback",
+      skeletonId: "abstract-skeleton",
       postprocess: (target) => {
         target.querySelectorAll("p").forEach((paragraph) => {
           if (paragraph.textContent.trim().startsWith("Keywords:")) {
@@ -621,6 +661,7 @@ const loadContent = async () => {
       heading: "Focus Areas",
       targetId: "focus-content",
       fallbackId: "focus-fallback",
+      skeletonId: "focus-skeleton",
     });
     renderSafely("Projects", "projects-fallback", () => renderProjects(tokens));
     renderSafely("In-School Achievements", "achievements-fallback", () =>
@@ -642,6 +683,9 @@ const loadContent = async () => {
       })
     );
   } catch (error) {
+    clearLoadingSkeletons();
+    setFallback("abstract-fallback", "Failed to load content.md.");
+    setFallback("focus-fallback", "Failed to load content.md.");
     setFallback("projects-fallback", "Failed to load content.md.");
     setFallback("achievements-fallback", "Failed to load content.md.");
     setFallback("appendix-fallback", "Failed to load content.md.");

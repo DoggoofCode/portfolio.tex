@@ -14,6 +14,84 @@ const setupRenderer = (container) => {
   return renderer;
 };
 
+export const programming_demo = (container) => {
+  container.classList.add("programming-demo-host");
+  container.replaceChildren();
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "playground-toolbar";
+
+  const title = document.createElement("p");
+  title.className = "playground-title no-indent";
+  title.textContent = "Playground";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "playground-run";
+  button.textContent = "Run code";
+
+  toolbar.appendChild(title);
+  toolbar.appendChild(button);
+
+  const grid = document.createElement("div");
+  grid.className = "playground-grid";
+
+  const inputPanel = document.createElement("label");
+  inputPanel.className = "playground-panel";
+  inputPanel.htmlFor = "programming-demo-editor";
+
+  const inputLabel = document.createElement("span");
+  inputLabel.className = "playground-label";
+  inputLabel.textContent = "Input";
+
+  const editor = document.createElement("textarea");
+  editor.id = "programming-demo-editor";
+  editor.className = "playground-editor";
+  editor.spellcheck = false;
+  editor.autocomplete = "off";
+  editor.autocapitalize = "off";
+  editor.autocorrect = "off";
+  editor.value = 'PRINT "Hello, world!"\nSET value = 42\nPRINT value';
+
+  inputPanel.appendChild(inputLabel);
+  inputPanel.appendChild(editor);
+
+  const outputPanel = document.createElement("div");
+  outputPanel.className = "playground-panel";
+
+  const outputLabel = document.createElement("span");
+  outputLabel.className = "playground-label";
+  outputLabel.textContent = "Output";
+
+  const output = document.createElement("pre");
+  output.id = "programming-demo-output";
+  output.className = "playground-output";
+  output.setAttribute("aria-live", "polite");
+
+  outputPanel.appendChild(outputLabel);
+  outputPanel.appendChild(output);
+
+  grid.appendChild(inputPanel);
+  grid.appendChild(outputPanel);
+
+  const renderOutput = () => {
+    const source = editor.value.trimEnd();
+    output.textContent = source;
+  };
+
+  button.addEventListener("click", renderOutput);
+  editor.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "enter") {
+      event.preventDefault();
+      renderOutput();
+    }
+  });
+
+  container.appendChild(toolbar);
+  container.appendChild(grid);
+  renderOutput();
+};
+
 export const demo_1 = (container) => {
   const width = container.clientWidth || 600;
   const height = container.clientHeight || 240;

@@ -62,8 +62,14 @@ LATENTS_PATH = "path/to/latents.json"
 ```
 You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a choosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
 
+### Custom Programming Language
+
+I created a custom assembly-like programming language called `ssl` _(Simple Scripting Language)_ with an operator-operand style language for scripting. The project originally started as an off shoot of [p2pchat](https://github.com/DoggoofCode/p2pchat)
+
+<programming-demo></programming-demo>
+
 ## In-School Achievements
-Hello world!
+Under Construction!
 
 ## Appendix Notes
 
