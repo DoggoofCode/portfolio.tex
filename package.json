@@ -20,6 +20,7 @@
   "dependencies": {
     "highlight.js": "^11.11.1",
     "marked": "^18.0.4",
+    "pyodide": "^0.29.4",
     "three": "^0.184.0"
   }
 }

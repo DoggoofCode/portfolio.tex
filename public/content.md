@@ -79,3 +79,7 @@ Project artifacts live here for download.
 <resource-1 location="./vae/latents.json" label="Training data latent positions (JSON)"></resource-1>
 <resource-2 location="./vae/model.pt" label="MNIST VAE Model (PT)"></resource-2>
 <resource-4 location="./vae/inference.py" label="Model Inference Script (PY)"></resource-4>
+
+### Custom Programming Language
+<resource-5 location="../ssl/interpreter.py" label="Language Interpreter (PY)"></resource-5>
+<resource-3 location="../ssl/scripts.zip" label="Simple SSL Scripts (ZIP)"></resource-3>

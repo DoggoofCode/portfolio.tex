@@ -14,9 +14,276 @@ const setupRenderer = (container) => {
   return renderer;
 };
 
+const SSL_ASSET_ROOT = `${import.meta.env.BASE_URL}ssl/`;
+const SSL_SCRIPT_ROOT = `${SSL_ASSET_ROOT}scripts/`;
+const PYODIDE_RUNTIME_ROOT = "/home/pyodide/ssl";
+const LOADED_PROGRAMMING_MODULES = new Set();
+const PROGRAMMING_SCRIPTS = {
+  welcome: "welcome.dbg",
+  math: "math.dbg",
+  timestable: "timestable.dbg",
+};
+const PROGRAMMING_SCRIPT_LABELS = {
+  welcome: "Welcome",
+  math: "Math",
+  timestable: "Times table",
+};
+
+const extractLinkedModules = (script) => {
+  const matches = script.matchAll(/^#link\s+([^\s]+)\s*$/gim);
+  return [...new Set(Array.from(matches, (match) => match[1]))];
+};
+
+const normalizeProgrammingModule = (moduleName) =>
+  moduleName.trim().replace(/^\/+/, "").replace(/\.py$/i, "");
+
+const ANSI_SGR_COLORS = {
+  30: "black",
+  31: "red",
+  32: "green",
+  33: "yellow",
+  34: "blue",
+  35: "magenta",
+  36: "cyan",
+  37: "white",
+  90: "bright-black",
+  91: "bright-red",
+  92: "bright-green",
+  93: "bright-yellow",
+  94: "bright-blue",
+  95: "bright-magenta",
+  96: "bright-cyan",
+  97: "bright-white",
+};
+
+const ANSI_BG_COLORS = {
+  40: "black",
+  41: "red",
+  42: "green",
+  43: "yellow",
+  44: "blue",
+  45: "magenta",
+  46: "cyan",
+  47: "white",
+  100: "bright-black",
+  101: "bright-red",
+  102: "bright-green",
+  103: "bright-yellow",
+  104: "bright-blue",
+  105: "bright-magenta",
+  106: "bright-cyan",
+  107: "bright-white",
+};
+
+const createAnsiState = () => ({
+  bold: false,
+  italic: false,
+  underline: false,
+  fg: null,
+  bg: null,
+});
+
+const applyAnsiCodes = (state, codes) => {
+  const list = codes.length > 0 ? codes : [0];
+  list.forEach((code) => {
+    if (code === 0) {
+      Object.assign(state, createAnsiState());
+      return;
+    }
+    if (code === 1) {
+      state.bold = true;
+      return;
+    }
+    if (code === 3) {
+      state.italic = true;
+      return;
+    }
+    if (code === 4) {
+      state.underline = true;
+      return;
+    }
+    if (code === 22) {
+      state.bold = false;
+      return;
+    }
+    if (code === 23) {
+      state.italic = false;
+      return;
+    }
+    if (code === 24) {
+      state.underline = false;
+      return;
+    }
+    if (code === 39) {
+      state.fg = null;
+      return;
+    }
+    if (code === 49) {
+      state.bg = null;
+      return;
+    }
+    if (ANSI_SGR_COLORS[code]) {
+      state.fg = ANSI_SGR_COLORS[code];
+      return;
+    }
+    if (ANSI_BG_COLORS[code]) {
+      state.bg = ANSI_BG_COLORS[code];
+    }
+  });
+};
+
+const createAnsiSpan = (state, text) => {
+  const span = document.createElement("span");
+  span.textContent = text;
+  if (state.bold) {
+    span.classList.add("ansi-bold");
+  }
+  if (state.italic) {
+    span.classList.add("ansi-italic");
+  }
+  if (state.underline) {
+    span.classList.add("ansi-underline");
+  }
+  if (state.fg) {
+    span.classList.add(`ansi-fg-${state.fg}`);
+  }
+  if (state.bg) {
+    span.classList.add(`ansi-bg-${state.bg}`);
+  }
+  return span;
+};
+
+const renderAnsiOutput = (target, rawText) => {
+  target.replaceChildren();
+  if (!rawText) {
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  const state = createAnsiState();
+  const ansiPattern = /\x1b\[([0-9;]*)m/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = ansiPattern.exec(rawText)) !== null) {
+    const text = rawText.slice(cursor, match.index);
+    if (text) {
+      fragment.appendChild(createAnsiSpan(state, text));
+    }
+    const codes = match[1]
+      ? match[1]
+          .split(";")
+          .map((value) => Number.parseInt(value, 10))
+          .filter(Number.isFinite)
+      : [0];
+    applyAnsiCodes(state, codes);
+    cursor = match.index + match[0].length;
+  }
+
+  const tail = rawText.slice(cursor);
+  if (tail) {
+    fragment.appendChild(createAnsiSpan(state, tail));
+  }
+
+  target.appendChild(fragment);
+};
+
+const ensureProgrammingModule = async (pyodide, moduleName) => {
+  const normalized = normalizeProgrammingModule(moduleName);
+  if (!normalized) {
+    return;
+  }
+
+  const runtimePath = `${PYODIDE_RUNTIME_ROOT}/${normalized}.py`;
+  if (LOADED_PROGRAMMING_MODULES.has(runtimePath)) {
+    return;
+  }
+
+  const response = await fetch(`${SSL_ASSET_ROOT}${normalized}.py`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load ${normalized}.py`);
+  }
+
+  const source = await response.text();
+  const directory = runtimePath.slice(0, runtimePath.lastIndexOf("/"));
+  pyodide.FS.mkdirTree(directory);
+  pyodide.FS.writeFile(runtimePath, source, { encoding: "utf8" });
+  LOADED_PROGRAMMING_MODULES.add(runtimePath);
+};
+
+let programmingRuntimePromise = null;
+
+const loadProgrammingRuntime = async () => {
+  if (!programmingRuntimePromise) {
+    programmingRuntimePromise = (async () => {
+      const [
+        { loadPyodide, version: pyodideVersion },
+        interpreterResponse,
+        browserResponse,
+      ] = await Promise.all([
+        import("pyodide"),
+        fetch(`${SSL_ASSET_ROOT}interpreter.py`, { cache: "no-store" }),
+        fetch(`${SSL_ASSET_ROOT}browser.py`, { cache: "no-store" }),
+      ]);
+
+      if (!interpreterResponse.ok) {
+        throw new Error("Failed to load interpreter.py");
+      }
+      if (!browserResponse.ok) {
+        throw new Error("Failed to load browser.py");
+      }
+      const [interpreterSource, browserSource] = await Promise.all([
+        interpreterResponse.text(),
+        browserResponse.text(),
+      ]);
+      const pyodide = await loadPyodide({
+        indexURL: `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`,
+      });
+
+      pyodide.FS.mkdirTree(PYODIDE_RUNTIME_ROOT);
+      pyodide.FS.writeFile(`${PYODIDE_RUNTIME_ROOT}/interpreter.py`, interpreterSource, {
+        encoding: "utf8",
+      });
+      pyodide.FS.writeFile(`${PYODIDE_RUNTIME_ROOT}/browser.py`, browserSource, {
+        encoding: "utf8",
+      });
+      pyodide.runPython(`import sys; sys.path.insert(0, ${JSON.stringify(PYODIDE_RUNTIME_ROOT)}); import browser`);
+
+      const ensureLinkedModules = async (script) => {
+        const linkedModules = extractLinkedModules(script);
+        await Promise.all(linkedModules.map((moduleName) => ensureProgrammingModule(pyodide, moduleName)));
+      };
+
+      const runBrowser = (script) =>
+        pyodide.runPython(`import browser; browser.run_browser(${JSON.stringify(script)})`);
+
+      return { pyodide, ensureLinkedModules, runBrowser };
+    })().catch((error) => {
+      programmingRuntimePromise = null;
+      throw error;
+    });
+  }
+
+  return programmingRuntimePromise;
+};
+
+const loadProgrammingScript = async (scriptName) => {
+  const filename = PROGRAMMING_SCRIPTS[scriptName] || PROGRAMMING_SCRIPTS.welcome;
+  const response = await fetch(`${SSL_SCRIPT_ROOT}${filename}`, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Failed to load ${filename}`);
+  }
+  return response.text();
+};
+
 export const programming_demo = (container) => {
   container.classList.add("programming-demo-host");
   container.replaceChildren();
+  const initialScriptPromise = loadProgrammingScript("welcome");
+  const wrapper = container.parentElement;
+  let isExpanded = false;
 
   const toolbar = document.createElement("div");
   toolbar.className = "playground-toolbar";
@@ -25,13 +292,40 @@ export const programming_demo = (container) => {
   title.className = "playground-title no-indent";
   title.textContent = "Playground";
 
+  const controls = document.createElement("div");
+  controls.className = "playground-toolbar-controls";
+
+  const scriptSelect = document.createElement("select");
+  scriptSelect.id = "programming-demo-default-script";
+  scriptSelect.className = "playground-script-select";
+  scriptSelect.setAttribute("aria-label", "Choose default script");
+  scriptSelect.title = "Choose default script";
+  Object.entries(PROGRAMMING_SCRIPTS).forEach(([value, filename]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = PROGRAMMING_SCRIPT_LABELS[value] || filename.replace(/\.dbg$/i, "");
+    scriptSelect.appendChild(option);
+  });
+  scriptSelect.value = "welcome";
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "playground-run";
   button.textContent = "Run code";
+  button.disabled = true;
+
+  controls.appendChild(scriptSelect);
+  controls.appendChild(button);
+
+  const sizeButton = document.createElement("button");
+  sizeButton.type = "button";
+  sizeButton.className = "playground-size-toggle";
+  sizeButton.textContent = "Widen";
+  sizeButton.setAttribute("aria-label", "Widen playground");
+  controls.appendChild(sizeButton);
 
   toolbar.appendChild(title);
-  toolbar.appendChild(button);
+  toolbar.appendChild(controls);
 
   const grid = document.createElement("div");
   grid.className = "playground-grid";
@@ -51,7 +345,7 @@ export const programming_demo = (container) => {
   editor.autocomplete = "off";
   editor.autocapitalize = "off";
   editor.autocorrect = "off";
-  editor.value = 'PRINT "Hello, world!"\nSET value = 42\nPRINT value';
+  editor.value = "Loading welcome script...";
 
   inputPanel.appendChild(inputLabel);
   inputPanel.appendChild(editor);
@@ -74,22 +368,89 @@ export const programming_demo = (container) => {
   grid.appendChild(inputPanel);
   grid.appendChild(outputPanel);
 
-  const renderOutput = () => {
-    const source = editor.value.trimEnd();
-    output.textContent = source;
+  container.appendChild(toolbar);
+  container.appendChild(grid);
+
+  const renderOutput = async () => {
+    try {
+      const source = editor.value.trimEnd();
+      const runtime = await loadProgrammingRuntime();
+      await runtime.ensureLinkedModules(source);
+      renderAnsiOutput(output, runtime.runBrowser(source));
+    } catch (error) {
+      output.textContent = `Interpreter execution failed.\n${error instanceof Error ? error.message : String(error)}`;
+      button.disabled = false;
+    }
+  };
+
+  const setExpanded = (nextExpanded) => {
+    isExpanded = nextExpanded;
+    if (wrapper) {
+      wrapper.classList.toggle("demo-wrap--expanded", isExpanded);
+    }
+    sizeButton.textContent = isExpanded ? "Narrow" : "Widen";
+    sizeButton.setAttribute("aria-label", isExpanded ? "Narrow playground" : "Widen playground");
   };
 
   button.addEventListener("click", renderOutput);
+  sizeButton.addEventListener("click", () => {
+    setExpanded(!isExpanded);
+  });
+  scriptSelect.addEventListener("change", async () => {
+    try {
+      const selectedScript = scriptSelect.value;
+      editorDirty = false;
+      editor.value = "Loading script...";
+      const script = await loadProgrammingScript(selectedScript);
+      if (scriptSelect.value === selectedScript && !editorDirty) {
+        editor.value = script;
+        output.textContent = "";
+        await renderOutput();
+      }
+    } catch (error) {
+      output.textContent = `Failed to load sample script.\n${error instanceof Error ? error.message : String(error)}`;
+    }
+  });
   editor.addEventListener("keydown", (event) => {
+    if (event.key === "Tab") {
+      event.preventDefault();
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.setRangeText("  ", start, end, "end");
+      return;
+    }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "enter") {
       event.preventDefault();
-      renderOutput();
+      void renderOutput();
     }
   });
 
-  container.appendChild(toolbar);
-  container.appendChild(grid);
-  renderOutput();
+  output.textContent = "Loading Pyodide interpreter...";
+  let editorDirty = false;
+  editor.addEventListener("input", () => {
+    editorDirty = true;
+  });
+
+  void initialScriptPromise.then((script) => {
+    if (!editorDirty && scriptSelect.value === "welcome") {
+      editor.value = script;
+    }
+  }).catch((error) => {
+    if (!editorDirty && scriptSelect.value === "welcome") {
+      editor.value = `Failed to load welcome.dbg\n${error instanceof Error ? error.message : String(error)}`;
+    }
+  });
+
+  void loadProgrammingRuntime()
+    .then(() => {
+      button.disabled = false;
+      return renderOutput();
+    })
+    .catch((error) => {
+      button.disabled = false;
+      output.textContent = `Pyodide initialization failed.\n${error instanceof Error ? error.message : String(error)}`;
+    });
+
 };
 
 export const demo_1 = (container) => {

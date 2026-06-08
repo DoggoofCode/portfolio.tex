@@ -354,6 +354,8 @@ class Interpreter:
             # Moved to next character BY DEFAULT
             character_pointer += 1
 
+        if not self.real_ln:
+            self.real_ln.append(1)
         lexed_script = [cmd for cmd in lexed_script if cmd]
 
         if self.debug:

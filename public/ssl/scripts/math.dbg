@@ -1,0 +1,19 @@
+#link stdlib
+
+label main:
+    set a 7;
+    set [ten] 10;
+    mul a [ten];
+    mul a 1000;
+    sub a 1000;
+
+    set b 4200;
+    div b 10;
+
+    set stdout a;
+    add stdout b;
+    sig flushnl;
+
+    set stdout "Expected output 69420";
+    sig flushnl;
+ret;

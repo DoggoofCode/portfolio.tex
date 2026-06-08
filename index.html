@@ -40,6 +40,8 @@
       <div class="gate-panel">
         <p class="gate-title">Password required</p>
         <form id="gate-form" class="gate-form">
+          <label class="sr-only" for="gate-username">Username</label>
+          <input id="gate-username" type="text" autocomplete="username" class="sr-only" tabindex="-1" aria-hidden="true" />
           <label class="gate-label" for="gate-input">Password</label>
           <div class="gate-row">
             <input id="gate-input" type="password" autocomplete="current-password" />
