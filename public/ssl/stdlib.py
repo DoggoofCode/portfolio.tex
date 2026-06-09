@@ -1,10 +1,11 @@
 from typing import Callable
 
+from browser import request_input
 from interpreter import Registers
 
 
 def dbg_input(reg: Registers) -> Registers:
-    reg._regs["stdin"] = input("Please enter input: ")
+    reg._regs["stdin"] = request_input("Please enter input: ")
     return reg
 
 
@@ -19,7 +20,7 @@ def dbg_dump(reg: Registers) -> Registers:
 
 
 def dbg_wait(reg: Registers) -> Registers:
-    input("Press any key to continue...")
+    request_input("Press any key to continue...")
     return reg
 
 
@@ -51,6 +52,9 @@ def dbg_tostr(reg: Registers) -> Registers:
     reg._regs["stdout"] = str(reg._parameters[0])
     return reg
 
+def dbg_print(reg: Registers) -> Registers:
+    print(str(reg._parameters[0]))
+    return reg
 
 FUNCTIONS: dict[str, Callable] = {
     "flusha": dbg_flusha,
@@ -62,4 +66,5 @@ FUNCTIONS: dict[str, Callable] = {
     "stra": dbg_float_to_str,
     "floata": dbg_str_to_float,
     "tostr": dbg_tostr,
+    "print": dbg_print,
 }

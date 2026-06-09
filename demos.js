@@ -22,11 +22,13 @@ const PROGRAMMING_SCRIPTS = {
   welcome: "welcome.dbg",
   math: "math.dbg",
   timestable: "timestable.dbg",
+  input: "input.dbg",
 };
 const PROGRAMMING_SCRIPT_LABELS = {
   welcome: "Welcome",
   math: "Math",
   timestable: "Times table",
+  input: "Input",
 };
 
 const PROGRAMMING_KEYWORDS = new Set([
@@ -454,7 +456,10 @@ const loadProgrammingRuntime = async () => {
       const runBrowser = (script) =>
         pyodide.runPython(`import browser; browser.run_browser(${JSON.stringify(script)})`);
 
-      return { pyodide, ensureLinkedModules, runBrowser };
+      const resumeBrowser = (value) =>
+        pyodide.runPython(`import browser; browser.resume_browser(${JSON.stringify(value)})`);
+
+      return { pyodide, ensureLinkedModules, runBrowser, resumeBrowser };
     })().catch((error) => {
       programmingRuntimePromise = null;
       throw error;
@@ -561,13 +566,22 @@ export const programming_demo = (container) => {
   outputLabel.className = "playground-label";
   outputLabel.textContent = "Output";
 
-  const output = document.createElement("pre");
+  const terminalShell = document.createElement("div");
+  terminalShell.className = "playground-terminal-shell";
+
+  const output = document.createElement("div");
   output.id = "programming-demo-output";
-  output.className = "playground-output";
+  output.className = "playground-terminal-console";
   output.setAttribute("aria-live", "polite");
 
+  const terminalTranscriptPane = document.createElement("div");
+  terminalTranscriptPane.className = "playground-terminal-transcript";
+
+  output.appendChild(terminalTranscriptPane);
+
   outputPanel.appendChild(outputLabel);
-  outputPanel.appendChild(output);
+  outputPanel.appendChild(terminalShell);
+  terminalShell.appendChild(output);
 
   grid.appendChild(inputPanel);
   grid.appendChild(outputPanel);
@@ -586,14 +600,95 @@ export const programming_demo = (container) => {
     editorHighlight.scrollLeft = editor.scrollLeft;
   };
 
+  let terminalAwaitingInput = false;
+
+  const scrollTerminalToBottom = () => {
+    output.scrollTop = output.scrollHeight;
+  };
+
+  const clearTerminal = () => {
+    terminalTranscriptPane.replaceChildren();
+    terminalAwaitingInput = false;
+  };
+
+  const appendTerminalOutput = (text) => {
+    if (!text) {
+      return;
+    }
+    const line = document.createElement("div");
+    line.className = "playground-terminal-output-chunk";
+    renderAnsiOutput(line, text);
+    terminalTranscriptPane.appendChild(line);
+    scrollTerminalToBottom();
+  };
+
+  const askTerminalPrompt = (prompt) =>
+    new Promise((resolve) => {
+      terminalAwaitingInput = true;
+      const promptText = prompt || "Input: ";
+      const promptRow = document.createElement("div");
+      promptRow.className = "playground-terminal-prompt";
+
+      const promptLabel = document.createElement("span");
+      promptLabel.className = "playground-terminal-prompt-label";
+      promptLabel.textContent = promptText;
+
+      const promptInput = document.createElement("input");
+      promptInput.className = "playground-terminal-prompt-input";
+      promptInput.type = "text";
+      promptInput.autocomplete = "off";
+      promptInput.spellcheck = false;
+      promptInput.autocapitalize = "off";
+      promptInput.autocorrect = "off";
+      promptInput.setAttribute("aria-label", "Terminal input");
+
+      promptRow.appendChild(promptLabel);
+      promptRow.appendChild(promptInput);
+      terminalTranscriptPane.appendChild(promptRow);
+      scrollTerminalToBottom();
+
+      promptInput.value = "";
+      promptInput.focus();
+
+      const finishPrompt = () => {
+        const value = promptInput.value;
+        terminalAwaitingInput = false;
+        promptInput.remove();
+        const promptValue = document.createElement("span");
+        promptValue.className = "playground-terminal-prompt-value";
+        promptValue.textContent = value;
+        promptRow.appendChild(promptValue);
+        scrollTerminalToBottom();
+        resolve(value);
+      };
+
+      promptInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          finishPrompt();
+        }
+      });
+    });
+
   const renderOutput = async () => {
     try {
       const source = editor.value.trimEnd();
       const runtime = await loadProgrammingRuntime();
       await runtime.ensureLinkedModules(source);
-      renderAnsiOutput(output, runtime.runBrowser(source));
+      clearTerminal();
+      let nextResult = JSON.parse(runtime.runBrowser(source));
+      while (true) {
+        appendTerminalOutput(nextResult.output || "");
+        if (nextResult.kind === "input") {
+          const value = await askTerminalPrompt(nextResult.prompt);
+          nextResult = JSON.parse(runtime.resumeBrowser(value));
+          continue;
+        }
+        break;
+      }
     } catch (error) {
-      output.textContent = `Interpreter execution failed.\n${error instanceof Error ? error.message : String(error)}`;
+      clearTerminal();
+      appendTerminalOutput(`Interpreter execution failed.\n${error instanceof Error ? error.message : String(error)}`);
       button.disabled = false;
     }
   };
@@ -621,11 +716,12 @@ export const programming_demo = (container) => {
       if (scriptSelect.value === selectedScript && !editorDirty) {
         editor.value = script;
         syncEditorHighlight();
-        output.textContent = "";
+        clearTerminal();
         await renderOutput();
       }
     } catch (error) {
-      output.textContent = `Failed to load sample script.\n${error instanceof Error ? error.message : String(error)}`;
+      clearTerminal();
+      appendTerminalOutput(`Failed to load sample script.\n${error instanceof Error ? error.message : String(error)}`);
     }
   });
   editor.addEventListener("keydown", (event) => {
@@ -643,7 +739,8 @@ export const programming_demo = (container) => {
     }
   });
 
-  output.textContent = "Loading Pyodide interpreter...";
+  clearTerminal();
+  appendTerminalOutput("Loading Pyodide interpreter...");
   let editorDirty = false;
   editor.addEventListener("input", () => {
     editorDirty = true;
@@ -671,7 +768,8 @@ export const programming_demo = (container) => {
     })
     .catch((error) => {
       button.disabled = false;
-      output.textContent = `Pyodide initialization failed.\n${error instanceof Error ? error.message : String(error)}`;
+      clearTerminal();
+      appendTerminalOutput(`Pyodide initialization failed.\n${error instanceof Error ? error.message : String(error)}`);
     });
 
 };

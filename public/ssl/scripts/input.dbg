@@ -1,0 +1,9 @@
+#link stdlib
+
+label main:
+  sig input;
+  sig flush(stdin);
+  sig input;
+  sig flush(stdin);
+ret;
+

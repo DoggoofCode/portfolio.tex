@@ -341,18 +341,93 @@ body.scrolled .top-nav {
 
 .playground-output {
   margin: 0;
-  background: #111318;
+  background: transparent;
   color: #e9eef3;
-  border: 1px solid var(--rule-light);
   padding: 0.75rem;
   font: 400 14px/21px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   box-sizing: border-box;
   white-space: pre-wrap;
   overflow: auto;
   font-variant-ligatures: none;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .playground-output span {
+  white-space: pre-wrap;
+}
+
+.playground-terminal-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  border: 1px solid var(--rule-light);
+  background: #111318;
+  color: #e9eef3;
+  overflow: hidden;
+}
+
+.playground-terminal-console {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 320px;
+  border: 0;
+  margin: 0;
+  padding: 0.75rem;
+  background: transparent;
+  color: #e9eef3;
+  box-sizing: border-box;
+  font: 400 14px/21px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  white-space: pre-wrap;
+  overflow: auto;
+  resize: none;
+  outline: none;
+  caret-color: #e9eef3;
+  font-variant-ligatures: none;
+}
+
+.playground-terminal-transcript {
+  display: block;
+  white-space: normal;
+}
+
+.playground-terminal-prompt {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+}
+
+.playground-terminal-output-chunk {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.playground-terminal-prompt-label,
+.playground-terminal-prompt-input,
+.playground-terminal-prompt-value {
+  font: 400 14px/21px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  color: #e9eef3;
+}
+
+.playground-terminal-prompt-label {
+  white-space: pre;
+}
+
+.playground-terminal-prompt-input {
+  flex: 0 1 auto;
+  min-width: 0;
+  width: 8ch;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.playground-terminal-prompt-value {
   white-space: pre-wrap;
 }
 

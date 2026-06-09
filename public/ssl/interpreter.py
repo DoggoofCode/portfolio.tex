@@ -209,6 +209,12 @@ class Registers:
         return f"Regs({self._regs}, p: {self._parameters})"
 
 
+class InputRequest(Exception):
+    def __init__(self, prompt: str = "") -> None:
+        super().__init__(prompt)
+        self.prompt = prompt
+
+
 class VariableScope:
     def __init__(self) -> None:
         self.variables: dict[Identifier, DataType] = {}
@@ -279,6 +285,7 @@ class Interpreter:
         self.variable_stack: list[VariableScope] = []
         self.sig_functions: dict[str, Callable] = {}
         self.runtime_sum: int = 0
+        self.current_row_ptr: int = 0
 
     def err(self, line: int, message: str) -> None:
         print(f"\x1b[31mFatal Error @ Line {self.real_ln[line]}: {message}")
@@ -689,14 +696,16 @@ class Interpreter:
             destination_ident = Identifier.clean(t.st)
             self.variable_scope.add(destination_ident, value)
 
-    def walk_tree(self) -> None:
+    def walk_tree(self, row_ptr: int | None = None) -> None:
         main_label: int | None = self.base_node.search("main")
         if main_label is None:
             self.err(0, "No main label found. Please ensure a main label exists")
             return
-        row_ptr: int = self.base_node.children[main_label].start + 1
+        if row_ptr is None:
+            row_ptr = self.base_node.children[main_label].start + 1
 
         while row_ptr < len(self.token_array):
+            self.current_row_ptr = row_ptr
             self.runtime_sum += 1
             operation: list[Token] = self.token_array[row_ptr]
             operand: Token = operation[0]
