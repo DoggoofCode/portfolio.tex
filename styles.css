@@ -749,11 +749,41 @@ body.scrolled .top-nav {
   margin-bottom: 1.8rem;
 }
 
-h1 {
+.title-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
+  margin-bottom: 0.2rem;
+  width: fit-content;
   font-size: 2.1rem;
-  margin: 0 0 0.6rem;
+  line-height: 1;
+}
+
+.title-block .title-mark {
+  width: auto;
+  height: 3em;
+  display: block;
+  flex: 0 0 auto;
+  max-width: none;
+}
+
+.title-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: inherit;
+  line-height: 1;
+  margin: 0;
   font-weight: 300;
   letter-spacing: 0.01em;
+}
+
+.title-name span {
+  display: block;
+  font-size: inherit;
+  line-height: 1;
 }
 
 .title-block p {
