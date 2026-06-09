@@ -29,6 +29,201 @@ const PROGRAMMING_SCRIPT_LABELS = {
   timestable: "Times table",
 };
 
+const PROGRAMMING_KEYWORDS = new Set([
+  "set",
+  "sig",
+  "jmp",
+  "label",
+  "ret",
+  "pop",
+  "push",
+  "gt",
+  "lt",
+  "eq",
+  "cjmp",
+  "hjmp",
+  "chjmp",
+  "add",
+  "sub",
+  "div",
+  "mul",
+]);
+
+const PROGRAMMING_REGISTERS = new Set([
+  "a",
+  "b",
+  "c",
+  "stdin",
+  "stdout",
+  "result",
+  "accumulator",
+  "p1",
+  "p2",
+  "p3",
+]);
+
+const PROGRAMMING_JUMP_KEYWORDS = new Set(["jmp", "cjmp", "hjmp", "chjmp"]);
+
+const HTML_ESCAPE_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+const escapeProgrammingHtml = (text) =>
+  String(text).replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char] || char);
+
+const wrapProgrammingToken = (className, text) =>
+  `<span class="${className}">${escapeProgrammingHtml(text)}</span>`;
+
+const renderProgrammingLine = (line) => {
+  let html = "";
+  let index = 0;
+  let nextRole = null;
+
+  while (index < line.length) {
+    const char = line[index];
+
+    if (/\s/.test(char)) {
+      let end = index + 1;
+      while (end < line.length && /\s/.test(line[end])) {
+        end += 1;
+      }
+      html += escapeProgrammingHtml(line.slice(index, end));
+      index = end;
+      continue;
+    }
+
+    if (char === "%") {
+      html += wrapProgrammingToken("ssl-comment", line.slice(index));
+      break;
+    }
+
+    if (char === '"') {
+      let end = index + 1;
+      while (end < line.length) {
+        if (line[end] === "\\" && end + 1 < line.length) {
+          end += 2;
+          continue;
+        }
+        if (line[end] === '"') {
+          end += 1;
+          break;
+        }
+        end += 1;
+      }
+      html += wrapProgrammingToken("ssl-string", line.slice(index, end));
+      index = end;
+      continue;
+    }
+
+    if (char === "#" && (index === 0 || /\s/.test(line[index - 1]))) {
+      let end = index + 1;
+      while (end < line.length && /[A-Za-z0-9_]/.test(line[end])) {
+        end += 1;
+      }
+      html += wrapProgrammingToken("ssl-directive", line.slice(index, end));
+      index = end;
+      continue;
+    }
+
+    if (char === "[") {
+      let end = index + 1;
+      while (end < line.length && line[end] !== "]") {
+        end += 1;
+      }
+      if (end < line.length) {
+        end += 1;
+        html += wrapProgrammingToken("ssl-variable", line.slice(index, end));
+        index = end;
+        continue;
+      }
+    }
+
+    if (char === "-" ? /[0-9]/.test(line[index + 1] || "") : /[0-9]/.test(char)) {
+      const numberMatch = line.slice(index).match(/^-?(?:\d+(?:\.\d+)?|\.\d+)/);
+      if (numberMatch) {
+        html += wrapProgrammingToken("ssl-number", numberMatch[0]);
+        index += numberMatch[0].length;
+        continue;
+      }
+    }
+
+    if (/[A-Za-z_]/.test(char)) {
+      let end = index + 1;
+      while (end < line.length && /[A-Za-z0-9_]/.test(line[end])) {
+        end += 1;
+      }
+      const word = line.slice(index, end);
+      let className = "ssl-identifier";
+
+      if (nextRole === "label") {
+        className = "ssl-label";
+      } else if (nextRole === "signal") {
+        className = "ssl-signal";
+      } else if (nextRole === "jump") {
+        className = "ssl-label-ref";
+      } else if (PROGRAMMING_KEYWORDS.has(word)) {
+        className = "ssl-keyword";
+      } else if (PROGRAMMING_REGISTERS.has(word)) {
+        className = "ssl-register";
+      } else {
+        let cursor = end;
+        while (cursor < line.length && /\s/.test(line[cursor])) {
+          cursor += 1;
+        }
+        if (line[cursor] === ":") {
+          className = "ssl-label";
+        }
+      }
+
+      html += wrapProgrammingToken(className, word);
+      index = end;
+
+      if (PROGRAMMING_KEYWORDS.has(word)) {
+        if (word === "label") {
+          nextRole = "label";
+        } else if (word === "sig") {
+          nextRole = "signal";
+        } else if (PROGRAMMING_JUMP_KEYWORDS.has(word)) {
+          nextRole = "jump";
+        } else {
+          nextRole = null;
+        }
+      } else {
+        nextRole = null;
+      }
+      continue;
+    }
+
+    if ("+-*/".includes(char)) {
+      html += wrapProgrammingToken("ssl-operator", char);
+      index += 1;
+      continue;
+    }
+
+    if ("(){}:;,.".includes(char)) {
+      html += wrapProgrammingToken("ssl-punctuation", char);
+      index += 1;
+      continue;
+    }
+
+    html += escapeProgrammingHtml(char);
+    index += 1;
+  }
+
+  return html;
+};
+
+const renderProgrammingHighlight = (source) =>
+  String(source ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => renderProgrammingLine(line))
+    .join("\n");
+
 const extractLinkedModules = (script) => {
   const matches = script.matchAll(/^#link\s+([^\s]+)\s*$/gim);
   return [...new Set(Array.from(matches, (match) => match[1]))];
@@ -338,6 +533,13 @@ export const programming_demo = (container) => {
   inputLabel.className = "playground-label";
   inputLabel.textContent = "Input";
 
+  const editorShell = document.createElement("div");
+  editorShell.className = "playground-editor-shell";
+
+  const editorHighlight = document.createElement("pre");
+  editorHighlight.className = "playground-editor-highlight";
+  editorHighlight.setAttribute("aria-hidden", "true");
+
   const editor = document.createElement("textarea");
   editor.id = "programming-demo-editor";
   editor.className = "playground-editor";
@@ -347,8 +549,10 @@ export const programming_demo = (container) => {
   editor.autocorrect = "off";
   editor.value = "Loading welcome script...";
 
+  editorShell.appendChild(editorHighlight);
+  editorShell.appendChild(editor);
   inputPanel.appendChild(inputLabel);
-  inputPanel.appendChild(editor);
+  inputPanel.appendChild(editorShell);
 
   const outputPanel = document.createElement("div");
   outputPanel.className = "playground-panel";
@@ -370,6 +574,17 @@ export const programming_demo = (container) => {
 
   container.appendChild(toolbar);
   container.appendChild(grid);
+
+  const syncEditorHighlight = () => {
+    editorHighlight.innerHTML = renderProgrammingHighlight(editor.value);
+    editorHighlight.scrollTop = editor.scrollTop;
+    editorHighlight.scrollLeft = editor.scrollLeft;
+  };
+
+  const syncEditorScroll = () => {
+    editorHighlight.scrollTop = editor.scrollTop;
+    editorHighlight.scrollLeft = editor.scrollLeft;
+  };
 
   const renderOutput = async () => {
     try {
@@ -401,9 +616,11 @@ export const programming_demo = (container) => {
       const selectedScript = scriptSelect.value;
       editorDirty = false;
       editor.value = "Loading script...";
+      syncEditorHighlight();
       const script = await loadProgrammingScript(selectedScript);
       if (scriptSelect.value === selectedScript && !editorDirty) {
         editor.value = script;
+        syncEditorHighlight();
         output.textContent = "";
         await renderOutput();
       }
@@ -417,6 +634,7 @@ export const programming_demo = (container) => {
       const start = editor.selectionStart;
       const end = editor.selectionEnd;
       editor.setRangeText("  ", start, end, "end");
+      syncEditorHighlight();
       return;
     }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "enter") {
@@ -429,15 +647,20 @@ export const programming_demo = (container) => {
   let editorDirty = false;
   editor.addEventListener("input", () => {
     editorDirty = true;
+    syncEditorHighlight();
   });
+  editor.addEventListener("scroll", syncEditorScroll);
+  syncEditorHighlight();
 
   void initialScriptPromise.then((script) => {
     if (!editorDirty && scriptSelect.value === "welcome") {
       editor.value = script;
+      syncEditorHighlight();
     }
   }).catch((error) => {
     if (!editorDirty && scriptSelect.value === "welcome") {
       editor.value = `Failed to load welcome.dbg\n${error instanceof Error ? error.message : String(error)}`;
+      syncEditorHighlight();
     }
   });
 

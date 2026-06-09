@@ -260,6 +260,53 @@ body.scrolled .top-nav {
   min-width: 0;
 }
 
+.playground-editor-shell {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 320px;
+  border: 1px solid var(--rule-light);
+  background: #ffffff;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.playground-editor-highlight,
+.playground-editor {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-height: 320px;
+  padding: 0.75rem;
+  font: 400 14px/21px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  box-sizing: border-box;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  letter-spacing: 0;
+  text-indent: 0;
+  text-align: left;
+  text-rendering: geometricPrecision;
+  font-variant-ligatures: none;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.playground-editor-highlight {
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: normal;
+  pointer-events: none;
+  color: #1f2937;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 0;
+  transform: translateY(-1px);
+}
+
+.playground-editor-highlight::-webkit-scrollbar {
+  display: none;
+}
+
 .playground-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -270,24 +317,36 @@ body.scrolled .top-nav {
 .playground-output {
   width: 100%;
   min-height: 320px;
-  border: 1px solid var(--rule-light);
-  padding: 0.75rem;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.92rem;
-  line-height: 1.45;
-  box-sizing: border-box;
 }
 
 .playground-editor {
+  z-index: 1;
+  margin: 0;
+  border: 0;
   resize: vertical;
-  background: #ffffff;
-  color: var(--ink);
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ink);
+  -webkit-text-fill-color: transparent;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: normal;
+  position: relative;
+  top: 0.5em;
+}
+
+.playground-editor::selection {
+  background: rgba(37, 99, 235, 0.18);
 }
 
 .playground-output {
   margin: 0;
   background: #111318;
   color: #e9eef3;
+  border: 1px solid var(--rule-light);
+  padding: 0.75rem;
+  font: 400 14px/21px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  box-sizing: border-box;
   white-space: pre-wrap;
   overflow: auto;
   font-variant-ligatures: none;
@@ -295,6 +354,59 @@ body.scrolled .top-nav {
 
 .playground-output span {
   white-space: pre-wrap;
+}
+
+.ssl-keyword {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.ssl-label {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.ssl-label-ref {
+  color: #0f766e;
+}
+
+.ssl-register {
+  color: #1d4ed8;
+}
+
+.ssl-string {
+  color: #b45309;
+}
+
+.ssl-comment {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.ssl-number {
+  color: #dc2626;
+}
+
+.ssl-variable {
+  color: #0f766e;
+}
+
+.ssl-directive {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.ssl-operator,
+.ssl-punctuation {
+  color: #4b5563;
+}
+
+.ssl-signal {
+  color: #9333ea;
+}
+
+.ssl-identifier {
+  color: inherit;
 }
 
 .demo-wrap[data-demo="programming_demo"].demo-wrap--expanded {
