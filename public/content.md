@@ -49,7 +49,7 @@ This process can be adapted for more than one image. To merge two images, you ne
 ![An interpolation between digits 1 and 8](./vae_content/interpolation_8_to_7.png)
 > An interpolation between digits 1 and 8
 
-#### Running the model
+#### <fold>Running the model</fold>
 You can run the VAE by downlaoding the model in the [appendix](#appendix/), and can be used for decoding saved latents and merging 5 of the same digit into one.
 
 To start make sure that you have python installed on your computer and run `pip install torch torchvision`. Also make sure that you have downloaded model.pt, latents.json, and inference.py in the appendix. Then at the top of inference.py, you will see: 
@@ -62,18 +62,188 @@ LATENTS_PATH = "path/to/latents.json"
 ```
 You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a choosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
 
+### P2P Chat Platform
+
+I built a peer-to-peer chat platform using a **ratification model** to ensure message authenticity across the network. Rather than trusting a central server, every message must be confirmed by a ratifier node before being broadcast — creating an auditable chain of custody and minimising data loss.
+
+The system uses a **distributed hash table (DHT)** to synchronise message history across all peers so any node can join the network and immediately catch up. Messages are encrypted end-to-end using RSA-wrapped AES keys.
+
+<chat-demo></chat-demo>
+
+The demo above shows the full lifecycle: a new node joins, syncs its DHT, composes a message, gets it ratified, then broadcasts it — at which point every peer updates their own DHT.
+
 ### Custom Programming Language
 
 I created a custom assembly-like programming language called `ssl` _(Simple Scripting Language)_, with an operator-operand style language for scripting. The project originally started as an off shoot of [p2pchat](https://github.com/DoggoofCode/p2pchat). 
 
-#### Interpreter Architecture 
+
+#### Interpreter Architecture
 
 The interpreter is broken up into 5 main stages, the resolver which finds and resolves import statemtents from python and ssl. Next the tokenizer _(which contains both the lexer and the tokenizer)_ breaks down the code into logical pieces then assigns them a token based on their type _(e.g. literal, keyword and identifier)_. It then finds all the labels, essentially how functions and loops are defined, and creates a tree to ensure scoping is enforced. Afterwards, the generated AST is executed.
 
-#### Langage Tutorial
-Under Construction!
-
 <programming-demo></programming-demo>
+
+#### Language Specifications
+
+SSL is an assembly-style scripting language. Every program is a sequence of **statements** separated by semicolons (`;`), grouped into **label blocks** delimited by a colon (`:`) and closed with `ret`.
+
+##### <fold>Hello, World</fold>
+
+The minimal SSL program links the standard library, defines a `main` label, writes to the `stdout` register, and flushes it:
+
+```
+#link stdlib
+
+label main:
+  set stdout "Hello, world!";
+  sig flushnl;
+ret;
+```
+
+`#link stdlib` imports the built-in signals. `set` loads a value into a register. `sig flushnl` calls the `flushnl` signal, which prints `stdout` and appends a newline.
+
+##### <fold>Registers</fold>
+
+SSL has a fixed set of named registers. Think of them as variables with reserved names.
+
+| Register | Purpose |
+|---|---|
+| `a` `b` `c` | General purpose |
+| `stdout` | Output buffer — write here, then call `sig flush` or `sig flushnl` |
+| `stdin` | Input buffer — populated by `sig input` |
+| `result` | Set by comparison instructions (`gt`, `lt`, `eq`) |
+| `accumulator` | General purpose accumulator |
+
+##### <fold>Memory Variables</fold>
+
+You can also create named variables using bracket syntax `[name]`. They behave exactly like registers:
+
+```
+set [count] 0;
+add [count] 1;
+set stdout [count];
+sig flushnl;
+```
+
+##### <fold>Arithmetic</fold>
+
+`add`, `sub`, `mul`, and `div` operate **in-place** on the destination register or variable:
+
+```
+set a 7;
+set [ten] 10;
+mul a [ten];     % a = 70
+sub a 1;         % a = 69
+```
+
+For quick expressions, inline math uses parentheses:
+
+```
+set stdout (a*b);
+```
+
+Strings can also be concatenated with `add`:
+
+```
+set stdout "Hello, ";
+add stdout "world!";
+sig flushnl;
+```
+
+##### <fold>Signals</fold>
+
+Signals are the standard library calls. They operate on the registers and are invoked with `sig`:
+
+| Signal | Description |
+|---|---|
+| `flushnl` | Print `stdout` with a newline, expanding `\e` as an ANSI escape |
+| `flush` | Print `stdout` without a newline, expanding `\n` escape sequences |
+| `input` | Pause and read a line from the user into `stdin` |
+| `flush(stdin)` | Print the value of `stdin` |
+| `tostr(value)` | Convert a value to a string and store it in `stdout` |
+| `flusha` | Print the `a` register with `repr()` |
+| `dump` | Print all register values |
+| `wait` | Pause until the user presses Enter |
+
+Signals that accept a parameter use parentheses: `sig tostr(stdout)`.
+
+##### <fold>Labels and Control Flow</fold>
+
+A label defines a **scoped block**. Execution enters at the label and exits at the matching `ret`:
+
+```
+label main:
+  % code here
+ret;
+```
+
+`jmp` jumps unconditionally to a label. `cjmp` jumps only when `result` is truthy (set by `gt`, `lt`, or `eq`):
+
+```
+label main:
+  set a 5;
+  gt a 3;       % result = 1 (true)
+  cjmp done;
+  set stdout "not reached";
+  sig flushnl;
+  label done:
+    set stdout "a > 3";
+    sig flushnl;
+  ret;
+ret;
+```
+
+##### <fold>Loops</fold>
+
+Loops are written as nested labels. `hjmp` jumps back to the top of the **current** label. `chjmp` does the same but only when `result` is truthy, making it a conditional loop-back:
+
+```
+label main:
+  set a 1; jmp _loop;
+  label _loop:
+    set stdout a;
+    sig tostr(stdout);
+    sig flushnl;
+    add a 1;
+    lt a 6;    % result = 1 while a < 6
+    chjmp;     % loop back if result is truthy
+  ret;
+ret;
+```
+
+This prints 1 through 5. The `jmp _loop` on the first line enters the inner label from outside; without it, the label body is skipped.
+
+##### <fold>ANSI Colours</fold>
+
+`flushnl` expands `\e` as the escape character, so standard ANSI SGR codes work:
+
+```
+set stdout "\e[1mBold text\e[0m and normal text";
+sig flushnl;
+```
+
+Common codes: `\e[1m` bold · `\e[3m` italic · `\e[31m` red · `\e[32m` green · `\e[0m` reset.
+
+##### <fold>User Input</fold>
+
+`sig input` pauses the program and reads a line into `stdin`. You can then work with `stdin` like any register:
+
+```
+label main:
+  sig input;
+  set stdout stdin;
+  sig flushnl;
+ret;
+```
+
+### p2pchat
+
+p2pchat is a peer-to-peer encrypted chat network built from the ground up. It features its own packet handling on top of UDP, its message handling and encryption. <tip info="June 2026">Currently</tip> it use debug script with a custom library connected to send and receive messages, which is then routed through the response which sends an appropriate response. 
+Architecturally, there are 2 base packet, message packets, and update packets. Message packets contain messages, edit to messages, and signals to delete messages, while update packets are used to update a group's DHT (<tip info="A table containing all previous message">Distributed Hash Table</tip>) and the list of all users. To send a message, a users first makes sure they have all the correct data, by requesting the DHT and list of users from the ratifier (the singular source to truth for all messages). If the user sees that their data is old compared to the ratifier's it will request for messages it has not recieved from its peers, and update itself to recover messages
+After verifying it has the latest data, it sends an `mrat` message to the ratifier, asking them to verify the message. Once a positive response is recieved, a `msg` message is sent to all members of the group, who verify its authenticity, and add it to their own tables.
+To read the full spec, you can read the project's [readme](https://github.com/DoggoofCode/p2pchat/blob/main/README.md)
+ 
+<chat-demo></chat-demo>
 
 ## In-School Achievements
 Under Construction!

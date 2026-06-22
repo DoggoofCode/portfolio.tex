@@ -171,6 +171,57 @@ body.scrolled .top-nav {
   border: 0;
 }
 
+tip {
+  display: inline;
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted var(--muted);
+  text-underline-offset: 0.2em;
+}
+
+tip::after {
+  content: attr(info);
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 220px;
+  width: max-content;
+  background: #1f2937;
+  color: #f3f4f6;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  border-radius: 3px;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+}
+
+tip::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 0.18rem);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1f2937;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 50;
+}
+
+tip:hover::after,
+tip:hover::before {
+  opacity: 1;
+}
+
+
 #abstract-content p,
 #focus-content p {
   text-indent: 0;
@@ -1018,7 +1069,7 @@ blockquote p {
   border-bottom: 1px solid var(--rule-light);
 }
 
-.accordion summary {
+.accordion > details > summary {
   cursor: pointer;
   list-style: none;
   display: flex;
@@ -1028,11 +1079,11 @@ blockquote p {
   text-indent: 0;
 }
 
-.accordion summary::-webkit-details-marker {
+.accordion > details > summary::-webkit-details-marker {
   display: none;
 }
 
-.accordion summary::before {
+.accordion > details > summary::before {
   content: "▸";
   font-size: 0.9rem;
   margin-right: 0.2rem;
@@ -1040,7 +1091,7 @@ blockquote p {
   transition: transform 0.18s ease;
 }
 
-.accordion details[open] summary::before {
+.accordion > details[open] > summary::before {
   transform: rotate(90deg) translateY(-1px);
 }
 
@@ -1063,6 +1114,61 @@ blockquote p {
 .accordion-body p {
   text-indent: 0;
   margin-bottom: 0.45rem;
+}
+
+.fold-details {
+  border-top: 1px solid var(--rule-light);
+  margin: 0.5rem 0 0;
+  padding: 0.2rem 0;
+}
+
+.fold-details:last-child {
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.fold-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  text-indent: 0;
+  padding: 0.25rem 0;
+  font-family: inherit;
+}
+
+.fold-summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold-summary::before {
+  content: "▸";
+  font-size: 0.82rem;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.fold-details[open] .fold-summary::before {
+  transform: rotate(90deg);
+}
+
+.fold-summary[data-level="4"] {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.fold-summary[data-level="5"] {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.fold-body {
+  padding: 0.3rem 0 0.4rem 1.1rem;
+  overflow: visible;
+}
+
+.fold-details:not([open]) .fold-body {
+  display: none;
 }
 
 .resource-bar {
@@ -1134,6 +1240,16 @@ blockquote p {
   min-height: 0;
   box-sizing: border-box;
   padding: 0.45rem 0.45rem 0.55rem;
+  overflow: hidden;
+  aspect-ratio: auto;
+}
+
+#projects-accordion .demo-shell.chat-demo-host {
+  height: 370px;
+  min-height: 280px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
   overflow: hidden;
   aspect-ratio: auto;
 }

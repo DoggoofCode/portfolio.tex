@@ -1246,3 +1246,261 @@ export const vae_structure_demo = async (container) => {
    console.error(error);
   }
 };
+
+export const chat_demo = (container) => {
+  container.classList.add("chat-demo-host");
+  container.replaceChildren();
+
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = "display:block;width:100%;height:100%";
+  container.appendChild(canvas);
+
+  const SERIF = '"STIX Two Text","CMU Serif","Latin Modern Roman","Times New Roman",serif';
+  const MONO  = '"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace';
+
+  const PACKET_COLORS = {
+    i:     "#3b82f6", iR:     "#93c5fd",
+    dht:   "#059669", dhtR:   "#34d399",
+    mrat:  "#d97706", mratR:  "#fbbf24",
+    smsg:  "#7c3aed", smsgR:  "#a78bfa",
+  };
+
+  // pentagon: You at bottom, peers around
+  const NODE_REL  = [
+    [0.50, 0.86], // 0 You
+    [0.14, 0.58], // 1 Peer A
+    [0.29, 0.15], // 2 Peer B
+    [0.71, 0.15], // 3 Peer C
+    [0.86, 0.58], // 4 Peer D
+  ];
+  const NODE_NAMES = ["You", "Peer A", "Peer B", "Peer C", "Peer D"];
+
+  const STEPS = [
+    { title: "1 · Joining the network — sending identify packet",
+      packets: [{ from: 0, to: 1, type: "i" }] },
+    { title: "2 · Identity confirmed by peer",
+      packets: [{ from: 1, to: 0, type: "iR" }] },
+    { title: "3 · Requesting message history (DHT)",
+      packets: [{ from: 0, to: 1, type: "dht" }] },
+    { title: "4 · Receiving DHT — local history synchronised",
+      packets: [{ from: 1, to: 0, type: "dhtR" }],
+      dhtGain: [0] },
+    { title: "5 · Sending message for ratification",
+      packets: [{ from: 0, to: 1, type: "mrat" }] },
+    { title: "6 · Message ratified — signature verified",
+      packets: [{ from: 1, to: 0, type: "mratR" }] },
+    { title: "7 · Broadcasting ratified message to all nodes",
+      packets: [
+        { from: 0, to: 2, type: "smsg" },
+        { from: 0, to: 3, type: "smsg" },
+        { from: 0, to: 4, type: "smsg" },
+      ] },
+    { title: "8 · Network acknowledges — all DHTs updated",
+      packets: [
+        { from: 2, to: 0, type: "smsgR" },
+        { from: 3, to: 0, type: "smsgR" },
+        { from: 4, to: 0, type: "smsgR" },
+      ],
+      dhtGain: [0, 1, 2, 3, 4] },
+  ];
+
+  const GRAPH_TOP = 58;
+  const GRAPH_PAD = 44;
+  const PIXEL_SPEED = 110; // px per second
+
+  let w = 600, h = 380, dpr = 1;
+  let activePackets = [];
+  let currentStep = 0;
+  let stepPhase = "animating";
+  let pauseTimer = 0;
+  let dhtNodes = new Set([1, 2, 3, 4]);
+  let flashMap = {};
+  let animId = null;
+  let lastT = 0;
+
+  const resize = () => {
+    const r = container.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = r.width  || 600;
+    h = r.height || 380;
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width  = `${w}px`;
+    canvas.style.height = `${h}px`;
+  };
+
+  const getCtx = () => {
+    const c = canvas.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return c;
+  };
+
+  const nodePos = (i) => {
+    const gh = h - GRAPH_TOP - GRAPH_PAD;
+    return [NODE_REL[i][0] * w, GRAPH_TOP + NODE_REL[i][1] * gh];
+  };
+
+  const dist2 = (a, b) => {
+    const [ax, ay] = nodePos(a), [bx, by] = nodePos(b);
+    return Math.hypot(bx - ax, by - ay);
+  };
+
+  const launchStep = (si) => {
+    currentStep = si;
+    stepPhase   = "animating";
+    pauseTimer  = 0;
+    activePackets = STEPS[si].packets.map((p) => ({ ...p, progress: 0, done: false }));
+  };
+
+  const frame = (now) => {
+    animId = requestAnimationFrame(frame);
+    const dt = Math.min((now - lastT) / 1000, 0.05);
+    lastT = now;
+    if (w < 50 || h < 50) return;
+
+    const c = getCtx();
+    c.clearRect(0, 0, w, h);
+    c.fillStyle = "#fff";
+    c.fillRect(0, 0, w, h);
+
+    // ── title ──
+    const step = STEPS[currentStep];
+    c.font         = `500 12.5px ${SERIF}`;
+    c.fillStyle    = "#111";
+    c.textAlign    = "center";
+    c.textBaseline = "middle";
+    c.fillText(step.title, w / 2, 21);
+
+    // ── progress dots ──
+    const DOT_R = 3, DOT_GAP = 9;
+    const totalDotW = STEPS.length * DOT_R * 2 + (STEPS.length - 1) * DOT_GAP;
+    const dotStartX = (w - totalDotW) / 2;
+    for (let i = 0; i < STEPS.length; i++) {
+      c.beginPath();
+      c.arc(dotStartX + DOT_R + i * (DOT_R * 2 + DOT_GAP), 41, DOT_R, 0, Math.PI * 2);
+      c.fillStyle = i === currentStep ? "#111" : "#d1d5db";
+      c.fill();
+    }
+
+    // ── edges ──
+    c.strokeStyle = "rgba(0,0,0,0.09)";
+    c.lineWidth   = 1;
+    for (let a = 0; a < 5; a++) {
+      for (let b = a + 1; b < 5; b++) {
+        const [ax, ay] = nodePos(a), [bx, by] = nodePos(b);
+        c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+      }
+    }
+
+    // ── flash halos ──
+    for (const ni of Object.keys(flashMap)) {
+      const [nx, ny] = nodePos(Number(ni));
+      c.beginPath();
+      c.arc(nx, ny, 32, 0, Math.PI * 2);
+      c.fillStyle = `rgba(16,185,129,${flashMap[ni] * 0.2})`;
+      c.fill();
+      flashMap[ni] -= dt * 2;
+      if (flashMap[ni] <= 0) delete flashMap[ni];
+    }
+
+    // ── nodes ──
+    for (let i = 0; i < 5; i++) {
+      const [nx, ny] = nodePos(i);
+      const r = i === 0 ? 21 : 17;
+      c.beginPath(); c.arc(nx, ny, r, 0, Math.PI * 2);
+      c.fillStyle   = "#fff"; c.fill();
+      c.strokeStyle = i === 0 ? "#111" : "#888";
+      c.lineWidth   = i === 0 ? 2 : 1.5;
+      c.stroke();
+      c.fillStyle    = i === 0 ? "#111" : "#555";
+      c.font         = `${i === 0 ? "600" : "400"} ${i === 0 ? "11px" : "10px"} ${SERIF}`;
+      c.textAlign    = "center";
+      c.textBaseline = "middle";
+      c.fillText(NODE_NAMES[i], nx, ny);
+      // DHT badge
+      if (dhtNodes.has(i)) {
+        const bx = nx + r - 4, by = ny - r + 4;
+        c.beginPath(); c.arc(bx, by, 5.5, 0, Math.PI * 2);
+        c.fillStyle = "#10b981"; c.fill();
+        c.fillStyle    = "#fff";
+        c.font         = `700 7px ${MONO}`;
+        c.textAlign    = "center";
+        c.textBaseline = "middle";
+        c.fillText("D", bx, by);
+      }
+    }
+
+    // ── packets ──
+    let allDone = true;
+    for (const p of activePackets) {
+      if (!p.done) {
+        p.progress = Math.min(p.progress + (PIXEL_SPEED * dt) / dist2(p.from, p.to), 1);
+        if (p.progress >= 1) { p.done = true; } else { allDone = false; }
+      }
+      if (!p.done) {
+        const [fx, fy] = nodePos(p.from), [tx, ty] = nodePos(p.to);
+        const px = fx + (tx - fx) * p.progress;
+        const py = fy + (ty - fy) * p.progress;
+        const col = PACKET_COLORS[p.type];
+        c.beginPath(); c.arc(px, py, 11, 0, Math.PI * 2);
+        c.fillStyle = `${col}2e`; c.fill();
+        c.beginPath(); c.arc(px, py, 6.5, 0, Math.PI * 2);
+        c.fillStyle = col; c.fill();
+        c.fillStyle = "#fff";
+        c.font         = `700 6px ${MONO}`;
+        c.textAlign    = "center";
+        c.textBaseline = "middle";
+        c.fillText(p.type, px, py);
+      }
+    }
+
+    // ── step machine ──
+    if (stepPhase === "animating" && allDone) {
+      const gains = STEPS[currentStep].dhtGain;
+      if (gains) {
+        for (const ni of gains) {
+          if (!dhtNodes.has(ni)) { dhtNodes.add(ni); flashMap[ni] = 1.4; }
+        }
+      }
+      stepPhase = "pausing";
+      pauseTimer = 0;
+    }
+    if (stepPhase === "pausing") {
+      pauseTimer += dt;
+      if (pauseTimer >= (currentStep === STEPS.length - 1 ? 2.0 : 0.9)) {
+        const next = (currentStep + 1) % STEPS.length;
+        if (next === 0) dhtNodes = new Set([1, 2, 3, 4]);
+        launchStep(next);
+      }
+    }
+
+    // ── legend ──
+    const LEG = [
+      ["i / iR",       "#3b82f6", "Identify"],
+      ["dht / dhtR",   "#059669", "DHT sync"],
+      ["mrat / mratR", "#d97706", "Ratify"],
+      ["smsg / smsgR", "#7c3aed", "Broadcast"],
+    ];
+    const itemW     = Math.max(Math.min(w / LEG.length, 130), 60);
+    const totalLegW = itemW * LEG.length;
+    let lx = (w - totalLegW) / 2;
+    const legY = h - 20;
+    for (const [, col, label] of LEG) {
+      c.beginPath(); c.arc(lx + 6, legY, 4.5, 0, Math.PI * 2);
+      c.fillStyle = col; c.fill();
+      c.fillStyle    = "#555";
+      c.font         = `11px ${SERIF}`;
+      c.textAlign    = "left";
+      c.textBaseline = "middle";
+      c.fillText(label, lx + 15, legY);
+      lx += itemW;
+    }
+  };
+
+  resize();
+  const ro = new ResizeObserver(resize);
+  ro.observe(container);
+  launchStep(0);
+  lastT = performance.now();
+  animId = requestAnimationFrame(frame);
+};
