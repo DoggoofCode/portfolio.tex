@@ -291,6 +291,7 @@ const renderProjects = (tokens) => {
   clearElement("projects-skeleton");
 
   initDemos(accordion);
+  initFolds(accordion);
   initResources(accordion);
   initResources(introTarget);
   typesetMath([accordion, introTarget]);
@@ -369,6 +370,7 @@ const renderAccordionSection = ({ tokens, heading, introId, accordionId, fallbac
 
   clearFallback(fallbackId);
   clearElement(`${fallbackId.replace("-fallback", "-skeleton")}`);
+  initFolds(accordion);
   initResources(accordion);
   initResources(introTarget);
   typesetMath([accordion, introTarget]);
@@ -556,6 +558,58 @@ const checkResource = async (url, allowHtml) => {
   } catch (error) {
     return false;
   }
+};
+
+const initFolds = (container) => {
+  if (!container) {
+    return;
+  }
+
+  const headingSelector = "h1,h2,h3,h4,h5,h6";
+  const headings = Array.from(container.querySelectorAll(headingSelector));
+
+  headings.forEach((heading) => {
+    const marker = heading.querySelector("fold");
+    if (!marker) {
+      return;
+    }
+
+    const headingLevel = parseInt(heading.tagName[1], 10);
+    const parent = heading.parentElement;
+    if (!parent) {
+      return;
+    }
+
+    const bodyNodes = [];
+    let sibling = heading.nextElementSibling;
+    while (sibling) {
+      if (sibling.matches(headingSelector)) {
+        const siblingLevel = parseInt(sibling.tagName[1], 10);
+        if (siblingLevel <= headingLevel) {
+          break;
+        }
+      }
+      bodyNodes.push(sibling);
+      sibling = sibling.nextElementSibling;
+    }
+
+    const details = document.createElement("details");
+    details.className = "fold-details";
+
+    const summary = document.createElement("summary");
+    summary.className = "fold-summary";
+    summary.dataset.level = String(headingLevel);
+    summary.textContent = marker.textContent;
+
+    const body = document.createElement("div");
+    body.className = "fold-body";
+    bodyNodes.forEach((node) => body.appendChild(node));
+
+    details.appendChild(summary);
+    details.appendChild(body);
+    parent.insertBefore(details, heading);
+    heading.remove();
+  });
 };
 
 const initResources = (container) => {
