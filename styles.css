@@ -1085,6 +1085,7 @@ blockquote p {
 
 .accordion > details > summary::before {
   content: "▸";
+  font-family: sans-serif;
   font-size: 0.9rem;
   margin-right: 0.2rem;
   transform: translateY(1px);
@@ -1143,6 +1144,7 @@ blockquote p {
 
 .fold-summary::before {
   content: "▸";
+  font-family: sans-serif;
   font-size: 0.82rem;
   flex-shrink: 0;
   transition: transform 0.18s ease;

@@ -1251,9 +1251,55 @@ export const chat_demo = (container) => {
   container.classList.add("chat-demo-host");
   container.replaceChildren();
 
+  // ── layout: canvas + controls ──
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "display:flex;flex-direction:column;width:100%;height:100%";
+  container.appendChild(wrapper);
+
   const canvas = document.createElement("canvas");
-  canvas.style.cssText = "display:block;width:100%;height:100%";
-  container.appendChild(canvas);
+  canvas.style.cssText = "display:block;width:100%;flex:1;min-height:0";
+  wrapper.appendChild(canvas);
+
+  const controls = document.createElement("div");
+  controls.style.cssText =
+    "display:flex;justify-content:center;align-items:center;gap:0.6rem;" +
+    "padding:4px 0 6px;flex-shrink:0";
+  wrapper.appendChild(controls);
+
+  // ── DOM legend ──
+  const legendEl = document.createElement("div");
+  legendEl.style.cssText =
+    "display:flex;justify-content:center;align-items:center;gap:1.2rem;" +
+    "padding:4px 0 2px;flex-shrink:0;font:11px/1 'STIX Two Text','Times New Roman',serif;color:#555";
+  const LEG_ENTRIES = [
+    ["#059669", "DHT sync"],
+    ["#d97706", "Ratify"],
+    ["#7c3aed", "Broadcast"],
+  ];
+  for (const [col, label] of LEG_ENTRIES) {
+    const item = document.createElement("span");
+    item.style.cssText = "display:inline-flex;align-items:center;gap:5px";
+    const dot = document.createElement("span");
+    dot.style.cssText =
+      `display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0`;
+    item.appendChild(dot);
+    item.appendChild(document.createTextNode(label));
+    legendEl.appendChild(item);
+  }
+  wrapper.insertBefore(legendEl, controls);
+
+  const btnPlay = document.createElement("button");
+  btnPlay.textContent = "⏸ Pause";
+  btnPlay.style.cssText =
+    "font:11px/1 'STIX Two Text','Times New Roman',serif;background:#fff;" +
+    "border:1px solid #ccc;border-radius:3px;padding:3px 10px;cursor:pointer;" +
+    "color:#333;letter-spacing:.02em";
+  controls.appendChild(btnPlay);
+
+  const btnRestart = document.createElement("button");
+  btnRestart.textContent = "↺ Restart";
+  btnRestart.style.cssText = btnPlay.style.cssText;
+  controls.appendChild(btnRestart);
 
   const SERIF = '"STIX Two Text","CMU Serif","Latin Modern Roman","Times New Roman",serif';
   const MONO  = '"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace';
@@ -1265,48 +1311,43 @@ export const chat_demo = (container) => {
     smsg:  "#7c3aed", smsgR:  "#a78bfa",
   };
 
-  // pentagon: You at bottom, peers around, Ratifier in centre
+  // diamond: You at bottom, Peers B/C/D around, Ratifier in centre
   const NODE_REL  = [
-    [0.50, 0.86], // 0 You
-    [0.14, 0.58], // 1 Peer A
-    [0.29, 0.15], // 2 Peer B
-    [0.71, 0.15], // 3 Peer C
-    [0.86, 0.58], // 4 Peer D
-    [0.50, 0.50], // 5 Ratifier (centre)
+    [0.50, 0.88], // 0 You
+    [0.12, 0.50], // 1 Peer B
+    [0.50, 0.12], // 2 Peer C
+    [0.88, 0.50], // 3 Peer D
+    [0.50, 0.50], // 4 Ratifier (centre)
   ];
-  const NODE_NAMES = ["You", "Peer A", "Peer B", "Peer C", "Peer D", "Ratifier"];
+  const NODE_NAMES = ["You", "Peer B", "Peer C", "Peer D", "Ratifier"];
 
   const STEPS = [
-    { title: "1 · Joining the network — sending identify packet",
-      packets: [{ from: 0, to: 1, type: "i" }] },
-    { title: "2 · Identity confirmed by peer",
-      packets: [{ from: 1, to: 0, type: "iR" }] },
-    { title: "3 · Requesting message history (DHT)",
-      packets: [{ from: 0, to: 1, type: "dht" }] },
-    { title: "4 · Receiving DHT — local history synchronised",
-      packets: [{ from: 1, to: 0, type: "dhtR" }],
+    { title: "1. Requesting message history from Ratifier",
+      packets: [{ from: 0, to: 4, type: "dht" }] },
+    { title: "2. Ratifier delivers DHT, history synchronised",
+      packets: [{ from: 4, to: 0, type: "dhtR" }],
       dhtGain: [0] },
-    { title: "5 · Sending message to Ratifier for approval",
-      packets: [{ from: 0, to: 5, type: "mrat" }] },
-    { title: "6 · Ratifier verifies signature — message approved",
-      packets: [{ from: 5, to: 0, type: "mratR" }] },
-    { title: "7 · Broadcasting ratified message to all nodes",
+    { title: "3. Sending message to Ratifier for approval",
+      packets: [{ from: 0, to: 4, type: "mrat" }] },
+    { title: "4. Ratifier verifies signature, message approved",
+      packets: [{ from: 4, to: 0, type: "mratR" }] },
+    { title: "5. Broadcasting ratified message to all peers",
       packets: [
+        { from: 0, to: 1, type: "smsg" },
         { from: 0, to: 2, type: "smsg" },
         { from: 0, to: 3, type: "smsg" },
-        { from: 0, to: 4, type: "smsg" },
       ] },
-    { title: "8 · Network acknowledges — all DHTs updated",
+    { title: "6. Network acknowledges, all DHTs updated",
       packets: [
+        { from: 1, to: 0, type: "smsgR" },
         { from: 2, to: 0, type: "smsgR" },
         { from: 3, to: 0, type: "smsgR" },
-        { from: 4, to: 0, type: "smsgR" },
       ],
-      dhtGain: [0, 1, 2, 3, 4] },
+      dhtGain: [0, 1, 2, 3] },
   ];
 
   const GRAPH_TOP = 58;
-  const GRAPH_PAD = 44;
+  const GRAPH_PAD = 16;
   const PIXEL_SPEED = 110; // px per second
 
   let w = 600, h = 380, dpr = 1;
@@ -1314,16 +1355,17 @@ export const chat_demo = (container) => {
   let currentStep = 0;
   let stepPhase = "animating";
   let pauseTimer = 0;
-  let dhtNodes = new Set([1, 2, 3, 4]);
+  let dhtNodes = new Set([1, 2, 3]);
   let flashMap = {};
+  let paused = false;
   let animId = null;
   let lastT = 0;
 
   const resize = () => {
-    const r = container.getBoundingClientRect();
+    const r = canvas.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = r.width  || 600;
-    h = r.height || 380;
+    h = r.height || 340;
     canvas.width  = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     canvas.style.width  = `${w}px`;
@@ -1355,7 +1397,7 @@ export const chat_demo = (container) => {
 
   const frame = (now) => {
     animId = requestAnimationFrame(frame);
-    const dt = Math.min((now - lastT) / 1000, 0.05);
+    const dt = paused ? 0 : Math.min((now - lastT) / 1000, 0.05);
     lastT = now;
     if (w < 50 || h < 50) return;
 
@@ -1383,21 +1425,21 @@ export const chat_demo = (container) => {
       c.fill();
     }
 
-    // ── edges: pentagon ring + all nodes to Ratifier ──
+    // ── edges: outer ring + spokes to Ratifier ──
     c.strokeStyle = "rgba(0,0,0,0.09)";
     c.lineWidth   = 1;
-    // pentagon ring
-    for (let a = 0; a < 5; a++) {
-      for (let b = a + 1; b < 5; b++) {
+    // outer ring (You + Peers B/C/D)
+    for (let a = 0; a < 4; a++) {
+      for (let b = a + 1; b < 4; b++) {
         const [ax, ay] = nodePos(a), [bx, by] = nodePos(b);
         c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
       }
     }
-    // spokes to Ratifier (dashed)
+    // spokes to Ratifier (dashed amber)
     c.setLineDash([3, 4]);
     c.strokeStyle = "rgba(217,119,6,0.25)";
-    const [rx, ry] = nodePos(5);
-    for (let i = 0; i < 5; i++) {
+    const [rx, ry] = nodePos(4);
+    for (let i = 0; i < 4; i++) {
       const [nx, ny] = nodePos(i);
       c.beginPath(); c.moveTo(nx, ny); c.lineTo(rx, ry); c.stroke();
     }
@@ -1414,15 +1456,18 @@ export const chat_demo = (container) => {
       if (flashMap[ni] <= 0) delete flashMap[ni];
     }
 
-    // ── nodes ──
-    for (let i = 0; i < 6; i++) {
+    // ── determine active sender/receiver nodes ──
+    const involvedNodes = new Set(
+      activePackets.filter((p) => !p.done).flatMap((p) => [p.from, p.to])
+    );
+
+    // helper: draw one node
+    const drawNode = (i) => {
       const [nx, ny] = nodePos(i);
       const isYou = i === 0;
-      const isRat = i === 5;
+      const isRat = i === 4;
       const r = isYou ? 21 : isRat ? 22 : 17;
-
       if (isRat) {
-        // diamond shape for Ratifier
         const s = r;
         c.beginPath();
         c.moveTo(nx,     ny - s);
@@ -1439,14 +1484,11 @@ export const chat_demo = (container) => {
         c.lineWidth   = isYou ? 2 : 1.5;
         c.stroke();
       }
-
       c.fillStyle    = isRat ? "#92400e" : isYou ? "#111" : "#555";
       c.font         = `${isYou || isRat ? "600" : "400"} ${isYou ? "11px" : isRat ? "9.5px" : "10px"} ${SERIF}`;
       c.textAlign    = "center";
       c.textBaseline = "middle";
       c.fillText(NODE_NAMES[i], nx, ny);
-
-      // DHT badge (only for non-Ratifier nodes)
       if (!isRat && dhtNodes.has(i)) {
         const bx = nx + r - 4, by = ny - r + 4;
         c.beginPath(); c.arc(bx, by, 5.5, 0, Math.PI * 2);
@@ -1457,6 +1499,11 @@ export const chat_demo = (container) => {
         c.textBaseline = "middle";
         c.fillText("D", bx, by);
       }
+    };
+
+    // ── pass 1: background nodes (not involved in active packets) ──
+    for (let i = 0; i < 5; i++) {
+      if (!involvedNodes.has(i)) drawNode(i);
     }
 
     // ── packets ──
@@ -1483,6 +1530,9 @@ export const chat_demo = (container) => {
       }
     }
 
+    // ── pass 2: sender/receiver nodes drawn on top of packets ──
+    for (const i of involvedNodes) drawNode(i);
+
     // ── step machine ──
     if (stepPhase === "animating" && allDone) {
       const gains = STEPS[currentStep].dhtGain;
@@ -1498,37 +1548,31 @@ export const chat_demo = (container) => {
       pauseTimer += dt;
       if (pauseTimer >= (currentStep === STEPS.length - 1 ? 2.0 : 0.9)) {
         const next = (currentStep + 1) % STEPS.length;
-        if (next === 0) dhtNodes = new Set([1, 2, 3, 4]);
+        if (next === 0) dhtNodes = new Set([1, 2, 3]);
         launchStep(next);
       }
-    }
-
-    // ── legend ──
-    const LEG = [
-      ["i / iR",       "#3b82f6", "Identify"],
-      ["dht / dhtR",   "#059669", "DHT sync"],
-      ["mrat / mratR", "#d97706", "Ratify"],
-      ["smsg / smsgR", "#7c3aed", "Broadcast"],
-    ];
-    const itemW     = Math.max(Math.min(w / LEG.length, 130), 60);
-    const totalLegW = itemW * LEG.length;
-    let lx = (w - totalLegW) / 2;
-    const legY = h - 20;
-    for (const [, col, label] of LEG) {
-      c.beginPath(); c.arc(lx + 6, legY, 4.5, 0, Math.PI * 2);
-      c.fillStyle = col; c.fill();
-      c.fillStyle    = "#555";
-      c.font         = `11px ${SERIF}`;
-      c.textAlign    = "left";
-      c.textBaseline = "middle";
-      c.fillText(label, lx + 15, legY);
-      lx += itemW;
     }
   };
 
   resize();
   const ro = new ResizeObserver(resize);
-  ro.observe(container);
+  ro.observe(canvas);
+
+  btnPlay.addEventListener("click", () => {
+    paused = !paused;
+    btnPlay.textContent = paused ? "▶ Play" : "⏸ Pause";
+    if (!paused) lastT = performance.now();
+  });
+
+  btnRestart.addEventListener("click", () => {
+    dhtNodes = new Set([1, 2, 3]);
+    flashMap = {};
+    paused = false;
+    btnPlay.textContent = "⏸ Pause";
+    lastT = performance.now();
+    launchStep(0);
+  });
+
   launchStep(0);
   lastT = performance.now();
   animId = requestAnimationFrame(frame);
