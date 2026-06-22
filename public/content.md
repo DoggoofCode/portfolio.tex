@@ -62,16 +62,6 @@ LATENTS_PATH = "path/to/latents.json"
 ```
 You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a choosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
 
-### P2P Chat Platform
-
-I built a peer-to-peer chat platform using a **ratification model** to ensure message authenticity across the network. Rather than trusting a central server, every message must be confirmed by a ratifier node before being broadcast — creating an auditable chain of custody and minimising data loss.
-
-The system uses a **distributed hash table (DHT)** to synchronise message history across all peers so any node can join the network and immediately catch up. Messages are encrypted end-to-end using RSA-wrapped AES keys.
-
-<chat-demo></chat-demo>
-
-The demo above shows the full lifecycle: a new node joins, syncs its DHT, composes a message, gets it ratified, then broadcasts it — at which point every peer updates their own DHT.
-
 ### Custom Programming Language
 
 I created a custom assembly-like programming language called `ssl` _(Simple Scripting Language)_, with an operator-operand style language for scripting. The project originally started as an off shoot of [p2pchat](https://github.com/DoggoofCode/p2pchat). 
@@ -239,8 +229,11 @@ ret;
 ### p2pchat
 
 p2pchat is a peer-to-peer encrypted chat network built from the ground up. It features its own packet handling on top of UDP, its message handling and encryption. <tip info="June 2026">Currently</tip> it use debug script with a custom library connected to send and receive messages, which is then routed through the response which sends an appropriate response. 
+
 Architecturally, there are 2 base packet, message packets, and update packets. Message packets contain messages, edit to messages, and signals to delete messages, while update packets are used to update a group's DHT (<tip info="A table containing all previous message">Distributed Hash Table</tip>) and the list of all users. To send a message, a users first makes sure they have all the correct data, by requesting the DHT and list of users from the ratifier (the singular source to truth for all messages). If the user sees that their data is old compared to the ratifier's it will request for messages it has not recieved from its peers, and update itself to recover messages
+
 After verifying it has the latest data, it sends an `mrat` message to the ratifier, asking them to verify the message. Once a positive response is recieved, a `msg` message is sent to all members of the group, who verify its authenticity, and add it to their own tables.
+
 To read the full spec, you can read the project's [readme](https://github.com/DoggoofCode/p2pchat/blob/main/README.md)
  
 <chat-demo></chat-demo>
