@@ -265,6 +265,9 @@ Former Member of the Model United Nations _(MUN)_ Executive Team and Current MUN
 
 Project artifacts live here for download.
 
+### Résumé
+<resource-6 location="../resume.pdf" label="Résumé (PDF)"></resource-6>
+
 ### VAE Data
 <resource-1 location="./vae/latents.json" label="Training data latent positions (JSON)"></resource-1>
 <resource-2 location="./vae/model.pt" label="MNIST VAE Model (PT)"></resource-2>
