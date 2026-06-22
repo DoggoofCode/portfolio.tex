@@ -6,7 +6,7 @@ Keywords: machine learning, transformers, data visualization, front-end engineer
 
 ## Focus Areas
 
-Finding the intersection between mathematics and machine learning through recreation models, such as transformers, quick and high-fidelty prototyping of AI models, and learning new mathematical concepts through code
+Finding the intersection between mathematics and machine learning through recreation models, such as transformers, quick and high-fidelity prototyping of AI models, and learning new mathematical concepts through code
 
 ## Projects
 These are a few of my best projects. You can see more on my [github page](https://github.com/Doggoofcode)
@@ -34,7 +34,7 @@ It is obviously the way to go!
 
 ### VAE for Synthetic Data
 
-Within this project I used a VAE _(Variational Autoencoder)_ to create synthetic data of numbers and fruits. VAE's take complex data and distills it into the simpler building blocks, for example, the tilt of the character or the position of the character. All of this data is put into a _latent space_, which can be thought of as a smaller image, or a point in a higher dimensional space. As you put more points in this space, the model slowly begins to put similar inputs closer, and different inputs farther apart in this space (i.e. images of the digit one closer to eachother, while images of the digit eight farther apart from the previous images).
+Within this project I used a VAE _(Variational Autoencoder)_ to create synthetic data of numbers and fruits. VAE's take complex data and distills it into the simpler building blocks, for example, the tilt of the character or the position of the character. All of this data is put into a _latent space_, which can be thought of as a smaller image, or a point in a higher dimensional space. As you put more points in this space, the model slowly begins to put similar inputs closer, and different inputs farther apart in this space (i.e. images of the digit one closer to each other, while images of the digit eight farther apart from the previous images).
 
 <vae-structure-demo></vae-structure-demo>
 
@@ -42,7 +42,7 @@ Within this project I used a VAE _(Variational Autoencoder)_ to create synthetic
 
 #### Applications
 
-Synthetic data from VAEs are incredibly useful models that can generate synthetic data for models. To generate synthetic data, similar which to a source image, a VAE should be used to encode it into the latent space. Then, within the latent space, the point can be moved and shifted slightly. After decoding the image, the output is a slightly shifted but similar image to what went in.
+Synthetic data from VAEs are incredibly useful models that can generate synthetic data for models. To generate synthetic data similar to a source image, a VAE should be used to encode it into the latent space. Then, within the latent space, the point can be moved and shifted slightly. After decoding the image, the output is a slightly shifted but similar image to what went in.
 
 This process can be adapted for more than one image. To merge two images, you need the point in space which the two images inhabit, then draw a line between them. Each point in that line represents a unique combination of the two source images, Moreover, the line's midpoint represents a combination of the two images
 
@@ -50,7 +50,7 @@ This process can be adapted for more than one image. To merge two images, you ne
 > An interpolation between digits 1 and 8
 
 #### <fold>Running the model</fold>
-You can run the VAE by downlaoding the model in the [appendix](#appendix/), and can be used for decoding saved latents and merging 5 of the same digit into one.
+You can run the VAE by downloading the model in the [appendix](#appendix/), and can be used for decoding saved latents and merging 5 of the same digit into one.
 
 To start make sure that you have python installed on your computer and run `pip install torch torchvision`. Also make sure that you have downloaded model.pt, latents.json, and inference.py in the appendix. Then at the top of inference.py, you will see: 
 
@@ -60,7 +60,7 @@ MODEL_PATH = "path/to/model.pt"
 IMAGE_PATH = "path/to/output_image.png"
 LATENTS_PATH = "path/to/latents.json"
 ```
-You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a choosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
+You can either generate data, which takes 5 of the same digit and outputs new data of their combination, or output an image, which decodes one of the latents of a chosen image stored in latents.json. Afterwards, remember to change the path of the model, latents and output_file based on your system.
 
 ### Custom Programming Language
 
@@ -69,7 +69,7 @@ I created a custom assembly-like programming language called `ssl` _(Simple Scri
 
 #### Interpreter Architecture
 
-The interpreter is broken up into 5 main stages, the resolver which finds and resolves import statemtents from python and ssl. Next the tokenizer _(which contains both the lexer and the tokenizer)_ breaks down the code into logical pieces then assigns them a token based on their type _(e.g. literal, keyword and identifier)_. It then finds all the labels, essentially how functions and loops are defined, and creates a tree to ensure scoping is enforced. Afterwards, the generated AST is executed.
+The interpreter is broken up into 5 main stages, the resolver which finds and resolves import statements from python and ssl. Next the tokenizer _(which contains both the lexer and the tokenizer)_ breaks down the code into logical pieces then assigns them a token based on their type _(e.g. literal, keyword and identifier)_. It then finds all the labels, essentially how functions and loops are defined, and creates a tree to ensure scoping is enforced. Afterwards, the generated AST is executed.
 
 <programming-demo></programming-demo>
 
@@ -228,18 +228,38 @@ ret;
 
 ### p2pchat
 
-p2pchat is a peer-to-peer encrypted chat network built from the ground up. It features its own packet handling on top of UDP, its message handling and encryption. <tip info="June 2026">Currently</tip> it use debug script with a custom library connected to send and receive messages, which is then routed through the response which sends an appropriate response. 
+p2pchat is a peer-to-peer encrypted chat network built from the ground up. It features its own packet handling on top of UDP, its message handling and encryption. <tip info="June 2026">Currently</tip> it uses a debug script with a custom library connected to send and receive messages, which is then routed through the response which sends an appropriate response. 
 
-Architecturally, there are 2 base packet, message packets, and update packets. Message packets contain messages, edit to messages, and signals to delete messages, while update packets are used to update a group's DHT (<tip info="A table containing all previous message">Distributed Hash Table</tip>) and the list of all users. To send a message, a users first makes sure they have all the correct data, by requesting the DHT and list of users from the ratifier (the singular source to truth for all messages). If the user sees that their data is old compared to the ratifier's it will request for messages it has not recieved from its peers, and update itself to recover messages
+Architecturally, there are 2 base packet, message packets, and update packets. Message packets contain messages, edit to messages, and signals to delete messages, while update packets are used to update a group's DHT (<tip info="A table containing all previous message">Distributed Hash Table</tip>) and the list of all users. To send a message, a user first makes sure they have all the correct data, by requesting the DHT and list of users from the ratifier (the singular source to truth for all messages). If the user sees that their data is old compared to the ratifier's it will request for messages it has not received from its peers, and update itself to recover messages
 
-After verifying it has the latest data, it sends an `mrat` message to the ratifier, asking them to verify the message. Once a positive response is recieved, a `msg` message is sent to all members of the group, who verify its authenticity, and add it to their own tables.
+After verifying it has the latest data, it sends an `mrat` message to the ratifier, asking them to verify the message. Once a positive response is received, a `msg` message is sent to all members of the group, who verify its authenticity, and add it to their own tables.
 
 To read the full spec, you can read the project's [readme](https://github.com/DoggoofCode/p2pchat/blob/main/README.md)
  
 <chat-demo></chat-demo>
 
 ## In-School Achievements
-Under Construction!
+Head of the OFS Math Society:
+
+* Where I presented mathematical ideas in a simple way to my peers
+* Wrote an advertisement that was presented to the school 
+* Help created a format for an upcoming journal
+
+Leader of the Computer Programming Club _(CP Club)_:
+
+* Create a campaign to advertise the Computer Programming Club
+* Assisted others to teach machine learning to new students
+* Taught beginners the programming language **python**, including loops, print statements and more. 
+
+Peer mentor for 3 years, where I introduced peers to their classes and the campus, and help them understand their responsibilities as new students.
+
+Peer tutor for 1 year, receiving the Peer Tutor Award. I assisted student in understanding the IGCSE Additional Mathematics and Extended Mathematics syllabi
+
+Former Member of the Model United Nations _(MUN)_ Executive Team and Current MUN Student Officer _(STOFF)_ Member:
+
+* Attended more than 25 conferences in total since 2020, <tip info="One of which was conducted internally in my institute">4 of those as a STOFF member
+* Coached my peers on speech writing and conducted mock debates with new MUN members
+* Was a member of an International Excursion to Taiwan to take part in a [TASMUN](https://www.tas.edu.tw/community/news/story/~board/tas-news/post/tasmun-xv-building-a-future-of-trust-and-collaboration)
 
 ## Appendix Notes
 
