@@ -99,8 +99,8 @@ SSL has a fixed set of named registers. Think of them as variables with reserved
 | Register | Purpose |
 |---|---|
 | `a` `b` `c` | General purpose |
-| `stdout` | Output buffer — write here, then call `sig flush` or `sig flushnl` |
-| `stdin` | Input buffer — populated by `sig input` |
+| `stdout` | Output buffer: write here, then call `sig flush` or `sig flushnl` |
+| `stdin` | Input buffer: populated by `sig input` |
 | `result` | Set by comparison instructions (`gt`, `lt`, `eq`) |
 | `accumulator` | General purpose accumulator |
 
