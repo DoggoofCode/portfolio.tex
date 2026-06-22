@@ -1265,15 +1265,16 @@ export const chat_demo = (container) => {
     smsg:  "#7c3aed", smsgR:  "#a78bfa",
   };
 
-  // pentagon: You at bottom, peers around
+  // pentagon: You at bottom, peers around, Ratifier in centre
   const NODE_REL  = [
     [0.50, 0.86], // 0 You
     [0.14, 0.58], // 1 Peer A
     [0.29, 0.15], // 2 Peer B
     [0.71, 0.15], // 3 Peer C
     [0.86, 0.58], // 4 Peer D
+    [0.50, 0.50], // 5 Ratifier (centre)
   ];
-  const NODE_NAMES = ["You", "Peer A", "Peer B", "Peer C", "Peer D"];
+  const NODE_NAMES = ["You", "Peer A", "Peer B", "Peer C", "Peer D", "Ratifier"];
 
   const STEPS = [
     { title: "1 · Joining the network — sending identify packet",
@@ -1285,10 +1286,10 @@ export const chat_demo = (container) => {
     { title: "4 · Receiving DHT — local history synchronised",
       packets: [{ from: 1, to: 0, type: "dhtR" }],
       dhtGain: [0] },
-    { title: "5 · Sending message for ratification",
-      packets: [{ from: 0, to: 1, type: "mrat" }] },
-    { title: "6 · Message ratified — signature verified",
-      packets: [{ from: 1, to: 0, type: "mratR" }] },
+    { title: "5 · Sending message to Ratifier for approval",
+      packets: [{ from: 0, to: 5, type: "mrat" }] },
+    { title: "6 · Ratifier verifies signature — message approved",
+      packets: [{ from: 5, to: 0, type: "mratR" }] },
     { title: "7 · Broadcasting ratified message to all nodes",
       packets: [
         { from: 0, to: 2, type: "smsg" },
@@ -1382,15 +1383,25 @@ export const chat_demo = (container) => {
       c.fill();
     }
 
-    // ── edges ──
+    // ── edges: pentagon ring + all nodes to Ratifier ──
     c.strokeStyle = "rgba(0,0,0,0.09)";
     c.lineWidth   = 1;
+    // pentagon ring
     for (let a = 0; a < 5; a++) {
       for (let b = a + 1; b < 5; b++) {
         const [ax, ay] = nodePos(a), [bx, by] = nodePos(b);
         c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
       }
     }
+    // spokes to Ratifier (dashed)
+    c.setLineDash([3, 4]);
+    c.strokeStyle = "rgba(217,119,6,0.25)";
+    const [rx, ry] = nodePos(5);
+    for (let i = 0; i < 5; i++) {
+      const [nx, ny] = nodePos(i);
+      c.beginPath(); c.moveTo(nx, ny); c.lineTo(rx, ry); c.stroke();
+    }
+    c.setLineDash([]);
 
     // ── flash halos ──
     for (const ni of Object.keys(flashMap)) {
@@ -1404,21 +1415,39 @@ export const chat_demo = (container) => {
     }
 
     // ── nodes ──
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const [nx, ny] = nodePos(i);
-      const r = i === 0 ? 21 : 17;
-      c.beginPath(); c.arc(nx, ny, r, 0, Math.PI * 2);
-      c.fillStyle   = "#fff"; c.fill();
-      c.strokeStyle = i === 0 ? "#111" : "#888";
-      c.lineWidth   = i === 0 ? 2 : 1.5;
-      c.stroke();
-      c.fillStyle    = i === 0 ? "#111" : "#555";
-      c.font         = `${i === 0 ? "600" : "400"} ${i === 0 ? "11px" : "10px"} ${SERIF}`;
+      const isYou = i === 0;
+      const isRat = i === 5;
+      const r = isYou ? 21 : isRat ? 22 : 17;
+
+      if (isRat) {
+        // diamond shape for Ratifier
+        const s = r;
+        c.beginPath();
+        c.moveTo(nx,     ny - s);
+        c.lineTo(nx + s, ny);
+        c.lineTo(nx,     ny + s);
+        c.lineTo(nx - s, ny);
+        c.closePath();
+        c.fillStyle   = "#fffbeb"; c.fill();
+        c.strokeStyle = "#d97706"; c.lineWidth = 2; c.stroke();
+      } else {
+        c.beginPath(); c.arc(nx, ny, r, 0, Math.PI * 2);
+        c.fillStyle   = "#fff"; c.fill();
+        c.strokeStyle = isYou ? "#111" : "#888";
+        c.lineWidth   = isYou ? 2 : 1.5;
+        c.stroke();
+      }
+
+      c.fillStyle    = isRat ? "#92400e" : isYou ? "#111" : "#555";
+      c.font         = `${isYou || isRat ? "600" : "400"} ${isYou ? "11px" : isRat ? "9.5px" : "10px"} ${SERIF}`;
       c.textAlign    = "center";
       c.textBaseline = "middle";
       c.fillText(NODE_NAMES[i], nx, ny);
-      // DHT badge
-      if (dhtNodes.has(i)) {
+
+      // DHT badge (only for non-Ratifier nodes)
+      if (!isRat && dhtNodes.has(i)) {
         const bx = nx + r - 4, by = ny - r + 4;
         c.beginPath(); c.arc(bx, by, 5.5, 0, Math.PI * 2);
         c.fillStyle = "#10b981"; c.fill();
