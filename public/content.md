@@ -238,6 +238,14 @@ To read the full spec, you can read the project's [readme](https://github.com/Do
  
 <chat-demo></chat-demo>
 
+
+### OpenMarket
+
+[OpenMarket](https://demo.vedjaggi.com) is an indevelopment solution used to monitor multiple portfolios in one application, with the ability to read and eventually analyze different news source and the quantity of news in order to make more informed decisions about markets as well as gain a deeper understanding of your holdings and the surroudning economy.
+
+This tool is currently in a public beta, pending release soon, with new updates shipped daily. If you find any bugs please email [bugs@vedjaggi.com](mailto:ved@vedjaggi.com)
+
+
 ## In-School Achievements
 Head of the OFS Math Society:
 
